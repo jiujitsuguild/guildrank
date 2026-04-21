@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!--
+  =====================================================================
+  柔術ギルド ランキング — モニター常設表示版（Googleスプレッドシート連携）
+  対象解像度 : 1920 × 1080 px（フルHD固定レイアウト）
+  データ取得 : Google Apps Script Web API
+  自動更新   : 5分ごとにデータ再フェッチ（ページリロードなし）
+  =====================================================================
+-->
+<meta name="viewport" content="width=1920">
+<title>柔術ギルド ランキング — MONITOR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+<style>
+/* =====================================================================
+   Design Tokens
+   ===================================================================== */
+:root {
+  --W: 1920px;
+  --H: 1080px;
+
+  --bg:        #04060a;
+  --surface:   #0e1420;
+  --card:      #131b2a;
+  --border:    #243050;
+  --border-hi: #3a4d70;
+
+  --gold:       #d4a84c;
+  --gold-light: #f0d070;
+  --gold-dim:   #7a5f28;
+
+  --white:     #f4f0e8;
+  --white-dim: #c8c2b4;
+  --muted:     #6a7490;
+
+  /* 称号カラー */
+  --t-initiate: #7a8aaa;
+  --t-disciple: #3a9ff8;
+  --t-warrior:  #b878f8;
+  --t-elite:    #f0d070;
+
+  /* Rank glow */
+  --g1: rgba(212,168,76,0.45);
+  --g2: rgba(190,190,205,0.35);
+  --g3: rgba(180,110,60,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: var(--W); height: var(--H);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Noto Sans JP', sans-serif;
+  /* 道着の織り目テクスチャ */
+  background-image:
+    repeating-linear-gradient(0deg,  transparent, transparent 3px, rgba(255,255,255,0.014) 3px, rgba(255,255,255,0.014) 6px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.010) 3px, rgba(255,255,255,0.010) 6px);
+}
+
+/* 焼き付き防止 — 超低速フロートアニメーション */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 900px 600px at 50% -80px, rgba(212,168,76,0.055) 0%, transparent 70%);
+  animation: breathe 18s ease-in-out infinite alternate;
+  pointer-events: none; z-index: 0;
+}
+@keyframes breathe {
+  from { opacity: 0.6; transform: scale(1); }
+  to   { opacity: 1.0; transform: scale(1.08); }
+}
+
+/* =====================================================================
+   全体グリッド : Header | Main | Footer
+   ===================================================================== */
+.screen {
+  position: relative;
+  width: var(--W); height: var(--H);
+  display: grid;
+  grid-template-rows: 120px 1fr 56px;
+  z-index: 1;
+  transition: opacity 0.6s ease;
+}
+.screen.fading { opacity: 0; }
+
+/* =====================================================================
+   HEADER
+   ===================================================================== */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 60px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(212,168,76,0.04) 0%, transparent 100%);
+  position: relative;
+}
+.header::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent 100%);
+}
+
+.header-left { display: flex; flex-direction: column; gap: 4px; }
+.header-eyebrow {
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 8px;
+  color: var(--gold-dim); text-transform: uppercase;
+}
+.header-title {
+  font-family: 'Cinzel', serif; font-size: 42px; font-weight: 900; letter-spacing: 6px;
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 55%, var(--gold-dim) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; line-height: 1; text-transform: uppercase;
+}
+
+.season-chip {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid var(--gold-dim);
+  background: linear-gradient(135deg, rgba(212,168,76,0.12), rgba(212,168,76,0.04));
+  padding: 8px 24px; border-radius: 2px;
+  font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: 5px;
+  color: var(--gold); text-transform: uppercase;
+}
+
+.header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 280px; }
+.clock {
+  font-family: 'Cinzel', serif; font-size: 38px; font-weight: 700;
+  letter-spacing: 4px; color: var(--white); font-variant-numeric: tabular-nums;
+}
+.clock-date { font-size: 14px; letter-spacing: 3px; color: var(--muted); font-family: 'Cinzel', serif; text-transform: uppercase; }
+
+/* =====================================================================
+   MAIN — Podium(左) + List(右)
+   ===================================================================== */
+.main {
+  display: grid;
+  grid-template-columns: 620px 1fr;
+  overflow: hidden;
+}
+.main::before {
+  content: '';
+  position: absolute;
+  left: 620px; top: 120px; bottom: 56px; width: 1px;
+  background: linear-gradient(180deg, transparent, var(--border) 15%, var(--border) 85%, transparent);
+  z-index: 2;
+}
+
+/* =====================================================================
+   PODIUM — 左カラム（Top3 縦並び）
+   ===================================================================== */
+.podium-col {
+  display: flex; flex-direction: column;
+  padding: 32px 40px 28px 60px; gap: 16px;
+  background: linear-gradient(90deg, rgba(212,168,76,0.025) 0%, transparent 100%);
+}
+
+.col-label {
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 6px;
+  color: var(--gold-dim); text-transform: uppercase;
+  display: flex; align-items: center; gap: 14px;
+}
+.col-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--gold-dim), transparent);
+}
+
+.p-card {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  align-items: center; gap: 20px;
+  padding: 22px 24px;
+  border: 1px solid var(--border); border-radius: 4px;
+  background: var(--card);
+  position: relative; overflow: hidden;
+  animation: slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both;
+}
+.p-card::before {
+  content: ''; position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+}
+.p-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.015) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.p-card.rank-1 {
+  border-color: var(--gold-dim);
+  background: linear-gradient(135deg, #1a2235 0%, var(--card) 60%);
+  animation: slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both, rank1Pulse 6s ease-in-out 1s infinite;
+}
+.p-card.rank-1::before { background: linear-gradient(180deg, var(--gold-light), var(--gold)); }
+
+@keyframes rank1Pulse {
+  0%, 100% { box-shadow: 0 0 40px var(--g1), inset 0 1px 0 rgba(212,168,76,0.25); }
+  50%       { box-shadow: 0 0 70px rgba(212,168,76,0.6), inset 0 1px 0 rgba(212,168,76,0.4); }
+}
+
+.p-card.rank-2 { border-color: rgba(180,180,195,0.3); box-shadow: 0 0 28px var(--g2); animation-delay: 0.15s; }
+.p-card.rank-2::before { background: linear-gradient(180deg, #d8d8e8, #909098); }
+.p-card.rank-3 { border-color: rgba(170,105,55,0.3); box-shadow: 0 0 24px var(--g3); animation-delay: 0.25s; }
+.p-card.rank-3::before { background: linear-gradient(180deg, #d08860, #7a4828); }
+
+.p-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700;
+  color: var(--bg); flex-shrink: 0;
+}
+.rank-1 .p-avatar { width: 64px; height: 64px; font-size: 26px; background: linear-gradient(135deg, var(--gold-light), var(--gold)); box-shadow: 0 0 20px rgba(212,168,76,0.6); }
+.rank-2 .p-avatar { background: linear-gradient(135deg, #d8d8e4, #9898a8); box-shadow: 0 0 14px rgba(180,180,195,0.5); }
+.rank-3 .p-avatar { background: linear-gradient(135deg, #c87850, #7a4828); box-shadow: 0 0 14px rgba(180,110,60,0.5); }
+
+.p-info { min-width: 0; }
+.p-rank-label {
+  font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 4px;
+  text-transform: uppercase; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.rank-1 .p-rank-label { color: var(--gold); }
+.rank-2 .p-rank-label { color: #b0b0c0; }
+.rank-3 .p-rank-label { color: #c08860; }
+
+.p-name {
+  font-size: 28px; font-weight: 900; letter-spacing: 1px;
+  color: var(--white); line-height: 1.1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;
+}
+.rank-1 .p-name { font-size: 34px; }
+.p-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.p-count-wrap { text-align: right; flex-shrink: 0; }
+.p-count { font-family: 'Cinzel', serif; font-weight: 900; line-height: 1; display: block; }
+.rank-1 .p-count { font-size: 52px; color: var(--gold); }
+.rank-2 .p-count { font-size: 40px; color: #d0d0dc; }
+.rank-3 .p-count { font-size: 40px; color: #d09070; }
+.p-unit { font-size: 11px; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; display: block; margin-top: 2px; }
+
+.crown { font-size: 18px; animation: crownPulse 3s ease-in-out infinite; }
+@keyframes crownPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(212,168,76,0.5)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(212,168,76,1.0)); }
+}
+
+/* =====================================================================
+   RANKING LIST — 右カラム
+   ===================================================================== */
+.list-col {
+  display: flex; flex-direction: column;
+  padding: 32px 60px 28px 40px; gap: 0; overflow: hidden;
+}
+.list-col .col-label { flex-direction: row-reverse; justify-content: flex-start; }
+.list-col .col-label::after { display: none; }
+.list-col .col-label::before {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(270deg, var(--gold-dim), transparent);
+}
+
+.list-header {
+  display: grid;
+  grid-template-columns: 72px 1fr 230px 170px;
+  gap: 0; padding: 10px 20px; margin-top: 12px;
+  border-bottom: 1px solid var(--border-hi);
+}
+.list-header span {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 4px;
+  color: var(--muted); text-transform: uppercase;
+}
+.list-header .lh-count { text-align: right; }
+
+.r-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 230px 170px;
+  align-items: center; gap: 0; height: 65px;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(36,48,80,0.6);
+  position: relative;
+  animation: fadeInRow 0.5s ease both;
+}
+.r-row:nth-child(even)  { background: rgba(255,255,255,0.013); }
+.r-row.top6 .r-num      { color: var(--white-dim); }
+
+/* 行ごとにアニメーション遅延 */
+.r-row:nth-child(1)  { animation-delay: 0.05s; }
+.r-row:nth-child(2)  { animation-delay: 0.10s; }
+.r-row:nth-child(3)  { animation-delay: 0.15s; }
+.r-row:nth-child(4)  { animation-delay: 0.20s; }
+.r-row:nth-child(5)  { animation-delay: 0.25s; }
+.r-row:nth-child(6)  { animation-delay: 0.30s; }
+.r-row:nth-child(7)  { animation-delay: 0.35s; }
+.r-row:nth-child(8)  { animation-delay: 0.40s; }
+.r-row:nth-child(9)  { animation-delay: 0.45s; }
+.r-row:nth-child(10) { animation-delay: 0.50s; }
+.r-row:nth-child(11) { animation-delay: 0.55s; }
+.r-row:nth-child(12) { animation-delay: 0.60s; }
+
+@keyframes fadeInRow    { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideInLeft  { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+
+.r-num  { font-family:'Cinzel',serif; font-size:26px; font-weight:700; color:var(--muted); }
+.r-name { font-size:26px; font-weight:700; color:var(--white); letter-spacing:0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:12px; }
+.r-title-cell { display:flex; align-items:center; }
+.r-count-cell { text-align:right; }
+.r-count { font-family:'Cinzel',serif; font-size:30px; font-weight:700; color:var(--white); line-height:1; display:block; }
+.r-unit  { font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
+
+/* =====================================================================
+   称号バッジ
+   ===================================================================== */
+.t-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px 4px 10px; border-radius: 2px; border: 1px solid;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px;
+  font-weight: 700; text-transform: uppercase; white-space: nowrap;
+  position: relative; overflow: hidden;
+}
+.t-icon { font-size: 12px; }
+
+.t-initiate { color: var(--t-initiate); border-color: rgba(122,138,170,0.35); background: rgba(122,138,170,0.07); }
+.t-disciple { color: var(--t-disciple); border-color: rgba(58,159,248,0.45);  background: rgba(58,159,248,0.08);  box-shadow: 0 0 10px rgba(58,159,248,0.2); }
+.t-warrior  { color: var(--t-warrior);  border-color: rgba(184,120,248,0.5);  background: rgba(184,120,248,0.09); box-shadow: 0 0 12px rgba(184,120,248,0.22); }
+.t-elite {
+  color: var(--t-elite); border-color: rgba(212,168,76,0.75); background: rgba(212,168,76,0.11);
+  animation: elitePulse 3s ease-in-out infinite;
+}
+.t-elite::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 55%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+@keyframes elitePulse { 0%,100% { box-shadow:0 0 10px rgba(212,168,76,0.35); } 50% { box-shadow:0 0 26px rgba(212,168,76,0.7),0 0 50px rgba(212,168,76,0.25); } }
+@keyframes shimmer    { 0% { left:-60%; } 100% { left:140%; } }
+
+/* =====================================================================
+   帯バッジ
+   ===================================================================== */
+.b-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 3px 11px 3px 9px; border-radius: 2px; border: 1px solid;
+  font-size: 11px; letter-spacing: 2px; font-weight: 700; text-transform: uppercase;
+}
+.b-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.b-white  { color: #e8e4dc; border-color: rgba(232,228,220,0.3); background: rgba(232,228,220,0.07); }
+.b-white .b-dot  { background: #e8e4dc; }
+.b-blue   { color: #70b0f0; border-color: rgba(30,95,168,0.55);  background: rgba(30,95,168,0.12); }
+.b-blue .b-dot   { background: #1e5fa8; }
+.b-purple { color: #c090f0; border-color: rgba(112,48,184,0.55); background: rgba(112,48,184,0.12); }
+.b-purple .b-dot { background: #7030b8; }
+.b-brown  { color: #d09878; border-color: rgba(138,72,32,0.55);  background: rgba(138,72,32,0.15); }
+.b-brown .b-dot  { background: #8a4820; }
+.b-black  { color: #b0b0b8; border-color: rgba(110,110,120,0.45); background: rgba(80,80,90,0.12); }
+.b-black .b-dot  { background: #505058; box-shadow: 0 0 6px rgba(255,255,255,0.18); }
+
+/* =====================================================================
+   FOOTER
+   ===================================================================== */
+.footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 60px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(0deg, rgba(212,168,76,0.025) 0%, transparent 100%);
+  position: relative;
+}
+.footer::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent 100%);
+}
+.footer-left  { display: flex; align-items: center; gap: 24px; }
+.footer-right { display: flex; align-items: center; gap: 20px; }
+.footer-logo  { font-family:'Cinzel',serif; font-size:13px; letter-spacing:5px; color:var(--gold-dim); text-transform:uppercase; }
+.footer-sep   { width:1px; height:20px; background:var(--border); }
+.last-update  { font-family:'Cinzel',serif; font-size:12px; letter-spacing:2px; color:var(--muted); }
+.next-update  { font-family:'Cinzel',serif; font-size:12px; letter-spacing:2px; color:var(--muted); }
+
+/* プログレスバー */
+.bar-wrap { width:200px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.bar-fill  { height:100%; background:linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius:2px; width:0%; transition:width 1s linear; }
+
+/* =====================================================================
+   状態表示オーバーレイ（更新中 / エラー / ロード中）
+   ===================================================================== */
+.overlay {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 20px; z-index: 100;
+  opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+}
+.overlay.show { opacity: 1; }
+.overlay.loading-ov { background: rgba(4,6,10,0.96); }
+.overlay.refresh-ov { background: rgba(4,6,10,0.88); }
+.overlay.error-ov   { background: rgba(4,6,10,0.92); }
+
+.ov-icon  { font-size: 48px; }
+.ov-title {
+  font-family: 'Cinzel', serif; font-size: 28px; letter-spacing: 8px;
+  color: var(--gold); text-transform: uppercase;
+}
+.ov-sub   { font-size: 14px; letter-spacing: 3px; color: var(--muted); font-family:'Cinzel',serif; }
+.ov-bar-wrap { width: 400px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.ov-bar  { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold-light)); border-radius: 2px; }
+.ov-bar.anim { animation: ovBarAnim 1.8s ease-in-out infinite; }
+@keyframes ovBarAnim { 0% {width:0%;margin-left:0} 50%{width:60%} 100%{width:0%;margin-left:100%} }
+
+/* エラー用 */
+.ov-error-msg { font-size: 13px; letter-spacing: 2px; color: #e05050; font-family:'Cinzel',serif; max-width: 600px; text-align:center; }
+.ov-retry-btn {
+  margin-top: 10px; padding: 10px 30px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px;
+  text-transform: uppercase; cursor: pointer;
+  background: transparent; border: 1px solid var(--gold-dim); color: var(--gold);
+  border-radius: 2px; transition: all 0.2s;
+}
+.ov-retry-btn:hover { background: rgba(212,168,76,0.1); border-color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- ローディングオーバーレイ -->
+<div class="overlay loading-ov show" id="loadingOv">
+  <div class="ov-icon">⚔</div>
+  <div class="ov-title">Loading Ranking</div>
+  <div class="ov-sub">スプレッドシートからデータを取得中...</div>
+  <div class="ov-bar-wrap"><div class="ov-bar anim"></div></div>
+</div>
+
+<!-- 更新中オーバーレイ -->
+<div class="overlay refresh-ov" id="refreshOv">
+  <div class="ov-icon">⟳</div>
+  <div class="ov-title">Updating Ranking</div>
+  <div class="ov-sub">最新データを取得中...</div>
+  <div class="ov-bar-wrap"><div class="ov-bar anim"></div></div>
+</div>
+
+<!-- エラーオーバーレイ -->
+<div class="overlay error-ov" id="errorOv">
+  <div class="ov-icon">⚠</div>
+  <div class="ov-title" style="color:#e05050;">Connection Error</div>
+  <div class="ov-error-msg" id="errorMsg">スプレッドシートへの接続に失敗しました。</div>
+  <div class="ov-sub" id="errorSub">次回の自動再試行まで待つか、ボタンで再試行してください。</div>
+  <button class="ov-retry-btn" onclick="fetchData(true)">⟳ 再試行</button>
+</div>
+
+<!-- メイン画面 -->
+<div class="screen" id="screen">
+
+  <header class="header">
+    <div class="header-left">
+      <span class="header-eyebrow">Brazilian Jiu-Jitsu</span>
+      <h1 class="header-title">Guild Ranking</h1>
+    </div>
+    <div>
+      <span class="season-chip">⚔ Season 2025</span>
+    </div>
+    <div class="header-right">
+      <div class="clock"     id="clock">00:00:00</div>
+      <div class="clock-date" id="clockDate">— —</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- 左：Top 3 -->
+    <div class="podium-col">
+      <div class="col-label">▸ Top Fighters</div>
+      <div id="podiumArea"></div>
+    </div>
+    <!-- 右：4位〜 -->
+    <div class="list-col">
+      <div class="col-label">▸ Full Rankings</div>
+      <div class="list-header">
+        <span>Rank</span>
+        <span>Fighter</span>
+        <span>Title</span>
+        <span class="lh-count">Sessions</span>
+      </div>
+      <div id="listArea"></div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-left">
+      <span class="footer-logo">⚔ BJJ Guild — Monitor Display</span>
+      <div class="footer-sep"></div>
+      <span class="last-update" id="lastUpdate">Last Updated: —</span>
+    </div>
+    <div class="footer-right">
+      <span class="next-update" id="nextUpdate">Next Fetch: 5:00</span>
+      <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// ★★★ 設定エリア ★★★
+//   Apps Script デプロイ後に表示されたURLをここに貼り付ける
+// ============================================================
+const SHEET_API_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+//  例: 'https://script.google.com/macros/s/AKfycby.../exec'
+//
+//  ↑ を差し替えるだけで動作します。他のコードは変更不要。
+// ============================================================
+
+const FETCH_INTERVAL_MS = 5 * 60 * 1000;  // 5分ごとにデータ再取得
+const RETRY_DELAY_MS    = 30 * 1000;       // エラー時は30秒後に再試行
+const MAX_DISPLAY       = 12;              // リスト表示最大行数（4位〜）
+
+// ============================================================
+// 称号システム
+// ============================================================
+const TITLES = [
+  { key:'elite',    name:'Elite',    nameJP:'精鋭',   min:300, icon:'⭐' },
+  { key:'warrior',  name:'Warrior',  nameJP:'闘士',   min:200, icon:'🔮' },
+  { key:'disciple', name:'Disciple', nameJP:'門下生', min:100, icon:'🔷' },
+  { key:'initiate', name:'Initiate', nameJP:'見習い', min:  0, icon:'◆'  },
+];
+function getTitleKey(count) {
+  for (const t of TITLES) { if (count >= t.min) return t.key; }
+  return 'initiate';
+}
+function titleBadgeHTML(count) {
+  const key = getTitleKey(count);
+  const t   = TITLES.find(x => x.key === key);
+  return `<span class="t-badge t-${key}"><span class="t-icon">${t.icon}</span>${t.name}</span>`;
+}
+
+// ============================================================
+// 帯バッジ
+// ============================================================
+const BELT_LABELS = { white:'白帯', blue:'青帯', purple:'紫帯', brown:'茶帯', black:'黒帯' };
+function beltHTML(belt) {
+  const safe  = ['white','blue','purple','brown','black'].includes(belt) ? belt : 'white';
+  const label = BELT_LABELS[safe];
+  return `<span class="b-badge b-${safe}"><span class="b-dot"></span>${label}</span>`;
+}
+
+// ============================================================
+// 時計
+// ============================================================
+const DAYS_JP = ['日','月','火','水','木','金','土'];
+function updateClock() {
+  const now = new Date();
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  const ss  = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${hh}:${mm}:${ss}`;
+  const y  = now.getFullYear();
+  const mo = String(now.getMonth()+1).padStart(2,'0');
+  const d  = String(now.getDate()).padStart(2,'0');
+  document.getElementById('clockDate').textContent = `${y}.${mo}.${d}（${DAYS_JP[now.getDay()]}）`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+// カウントダウン & プログレスバー
+// ============================================================
+let fetchElapsed = 0;
+function tickCountdown() {
+  fetchElapsed += 1000;
+  const remain = Math.max(0, FETCH_INTERVAL_MS - fetchElapsed);
+  const rm = Math.floor(remain / 60000);
+  const rs = Math.floor((remain % 60000) / 1000);
+  document.getElementById('nextUpdate').textContent =
+    `Next Fetch: ${String(rm).padStart(1,'0')}:${String(rs).padStart(2,'0')}`;
+  const pct = Math.min((fetchElapsed / FETCH_INTERVAL_MS) * 100, 100);
+  document.getElementById('barFill').style.width = pct + '%';
+}
+setInterval(tickCountdown, 1000);
+
+// ============================================================
+// オーバーレイ制御
+// ============================================================
+function showOverlay(id)  { document.getElementById(id).classList.add('show'); }
+function hideOverlay(id)  { document.getElementById(id).classList.remove('show'); }
+function hideAllOverlays() {
+  ['loadingOv','refreshOv','errorOv'].forEach(hideOverlay);
+}
+
+// ============================================================
+// データフェッチ
+// ============================================================
+let isFirstLoad = true;
+let retryTimer  = null;
+
+async function fetchData(isManual = false) {
+  // タイマーをリセット
+  clearTimeout(retryTimer);
+  fetchElapsed = 0;
+
+  // オーバーレイ表示
+  hideAllOverlays();
+  if (isFirstLoad || isManual) {
+    showOverlay('loadingOv');
+  } else {
+    // 定期更新：画面フェード→更新中表示
+    document.getElementById('screen').classList.add('fading');
+    await sleep(600);
+    showOverlay('refreshOv');
+  }
+
+  // URLが未設定の場合はサンプルデータで動作
+  if (!SHEET_API_URL || SHEET_API_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    await sleep(1000); // ロード演出
+    renderAll(SAMPLE_DATA);
+    hideAllOverlays();
+    document.getElementById('screen').classList.remove('fading');
+    setLastUpdate();
+    isFirstLoad = false;
+    scheduleNextFetch();
+    return;
+  }
+
+  try {
+    // キャッシュバスター付きでフェッチ
+    const url      = `${SHEET_API_URL}?t=${Date.now()}`;
+    const response = await fetch(url);
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data = await response.json();
+
+    if (data.error) throw new Error(data.error);
+    if (!Array.isArray(data.members)) throw new Error('Invalid data format');
+
+    // 成功
+    renderAll(data.members);
+    hideAllOverlays();
+    document.getElementById('screen').classList.remove('fading');
+    setLastUpdate();
+    isFirstLoad = false;
+    scheduleNextFetch();
+
+  } catch (err) {
+    // エラー処理
+    console.error('Fetch error:', err);
+    hideAllOverlays();
+    document.getElementById('screen').classList.remove('fading');
+    document.getElementById('errorMsg').textContent =
+      `接続エラー: ${err.message}`;
+    document.getElementById('errorSub').textContent =
+      `${Math.floor(RETRY_DELAY_MS/1000)}秒後に自動再試行します...`;
+    showOverlay('errorOv');
+    // 初回ロードに失敗した場合もサンプルデータで表示
+    if (isFirstLoad) renderAll(SAMPLE_DATA);
+    isFirstLoad = false;
+    // 30秒後に自動再試行
+    retryTimer = setTimeout(() => fetchData(), RETRY_DELAY_MS);
+  }
+}
+
+function scheduleNextFetch() {
+  setTimeout(() => fetchData(), FETCH_INTERVAL_MS);
+}
+
+function setLastUpdate() {
+  const now = new Date();
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const mm  = String(now.getMinutes()).padStart(2,'0');
+  document.getElementById('lastUpdate').textContent = `Last Updated: ${hh}:${mm}`;
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ============================================================
+// レンダリング
+// ============================================================
+function initial(name) { return (name || '?')[0]; }
+function rankLabel(r)  { return r === 1 ? '1ST' : r === 2 ? '2ND' : r === 3 ? '3RD' : `${r}`; }
+
+function renderAll(members) {
+  // 参加回数の降順でソート
+  const sorted = [...members].sort((a, b) => b.count - a.count);
+  renderPodium(sorted.slice(0, 3));
+  renderList(sorted.slice(3, 3 + MAX_DISPLAY));
+}
+
+function renderPodium(top3) {
+  const el = document.getElementById('podiumArea');
+  const rc = ['rank-1','rank-2','rank-3'];
+  const rn = [1, 2, 3];
+
+  el.innerHTML = top3.map((m, i) => `
+    <div class="p-card ${rc[i]}">
+      <div class="p-avatar">${initial(m.name)}</div>
+      <div class="p-info">
+        <div class="p-rank-label">
+          ${rn[i] === 1 ? '<span class="crown">👑</span>' : ''}
+          ${rankLabel(rn[i])} Place
+        </div>
+        <div class="p-name">${m.name}</div>
+        <div class="p-badges">
+          ${titleBadgeHTML(m.count)}
+          ${beltHTML(m.belt)}
+        </div>
+      </div>
+      <div class="p-count-wrap">
+        <span class="p-count">${m.count.toLocaleString()}</span>
+        <span class="p-unit">sessions</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderList(rest) {
+  const el = document.getElementById('listArea');
+  if (!rest.length) { el.innerHTML = ''; return; }
+  el.innerHTML = rest.map((m, i) => {
+    const rank     = i + 4;
+    const topClass = rank <= 6 ? 'top6' : '';
+    return `
+    <div class="r-row ${topClass}">
+      <div class="r-num">${rank}</div>
+      <div class="r-name">${m.name}</div>
+      <div class="r-title-cell">${titleBadgeHTML(m.count)}</div>
+      <div class="r-count-cell">
+        <span class="r-count">${m.count.toLocaleString()}</span>
+        <span class="r-unit">sessions</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// サンプルデータ（URLが未設定 or エラー時のフォールバック）
+// ============================================================
+const SAMPLE_DATA = [
+  { name:'中村 剛',   count:312, belt:'black'  },
+  { name:'田中 誠',   count:248, belt:'black'  },
+  { name:'佐藤 健',   count:195, belt:'brown'  },
+  { name:'山本 翔',   count:156, belt:'brown'  },
+  { name:'高橋 亮',   count:128, belt:'purple' },
+  { name:'伊藤 大',   count: 97, belt:'purple' },
+  { name:'加藤 蓮',   count: 74, belt:'blue'   },
+  { name:'吉田 陸',   count: 52, belt:'blue'   },
+  { name:'松本 葵',   count: 31, belt:'blue'   },
+  { name:'渡辺 涼',   count: 18, belt:'white'  },
+  { name:'小林 凌',   count: 14, belt:'white'  },
+  { name:'山田 拓',   count:  9, belt:'white'  },
+  { name:'鈴木 葵',   count:  6, belt:'white'  },
+  { name:'橋本 晴',   count:  3, belt:'white'  },
+  { name:'長谷川 蒼', count:  1, belt:'white'  },
+];
+
+// ============================================================
+// 起動
+// ============================================================
+fetchData();
+</script>
+</body>
+</html>
