@@ -571,10 +571,13 @@ function initCheckin() {
   const checkinHint = document.getElementById('checkinHint');
 
   if (NFC_MEMBER_ID && nfcMember) {
-    // IDが特定できた場合
+    // カテゴリに合わせてタブを切り替え
+    if (nfcMember.category) switchMobileTab(nfcMember.category);
+
     if (AUTO_CHECKIN) {
-      // auto=1 → 自動でチェックイン実行（ボタン不要）
-      doCheckin();
+      // auto=1 → データ取得完了後に自動チェックイン実行
+      // 少し待ってから実行（画面描画完了を待つ）
+      setTimeout(() => doCheckin(), 300);
     } else {
       // 手動チェックイン画面を表示
       personal.classList.add('show');
@@ -582,10 +585,8 @@ function initCheckin() {
       document.getElementById('checkinMonthly').textContent = nfcMember.monthly;
       document.getElementById('checkinTotal').textContent   = nfcMember.total.toLocaleString();
     }
-    // カテゴリに合わせてタブを切り替え
-    if (nfcMember.category) switchMobileTab(nfcMember.category);
   } else if (NFC_MEMBER_ID && !nfcMember) {
-    checkinHint.textContent = `ID: ${NFC_MEMBER_ID} が見つかりませんでした`;
+    checkinHint.textContent  = `ID: ${NFC_MEMBER_ID} が見つかりませんでした`;
     genericBtn.style.display = 'block';
   } else {
     genericBtn.style.display = 'block';
