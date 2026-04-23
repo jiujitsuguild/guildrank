@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!--
+  =====================================================================
+  柔術ギルド — チェックイン専用ページ（軽量版）
+
+  NFCカードのURL例:
+  https://あなたのURL/bjj-checkin.html?id=1
+
+  チェックイン完了後は自動でページを閉じる
+  タブが溜まらないので長時間運用でもフリーズしない
+  =====================================================================
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BJJ チェックイン</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #04060a;
+  --card:  #131b2a;
+  --gold:  #d4a84c;
+  --gold-light: #f0d070;
+  --gold-dim:   #7a5f28;
+  --white: #f4f0e8;
+  --muted: #6a7490;
+  --green: #50c878;
+  --red:   #e05050;
+}
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.01) 3px, rgba(255,255,255,0.01) 6px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 6px);
+}
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* ロゴ */
+.logo {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 6px;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+/* カード */
+.card {
+  background: var(--card);
+  border: 1px solid #243050;
+  border-radius: 8px;
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent);
+}
+
+/* ローディング状態 */
+.state { display: none; }
+.state.active { display: block; }
+
+/* アイコン */
+.icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  display: block;
+  animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes iconPop {
+  from { opacity:0; transform:scale(0.5); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* テキスト */
+.state-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.state-title.gold  { color: var(--gold); }
+.state-title.green { color: var(--green); }
+.state-title.red   { color: var(--red); }
+
+.member-name {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.member-count {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+.member-count span {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* プログレスバー（完了後のカウントダウン） */
+.progress-wrap {
+  height: 3px;
+  background: #243050;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  border-radius: 2px;
+  width: 100%;
+  transition: width linear;
+}
+
+.close-hint {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-top: 14px;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+}
+
+/* スピナー */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #243050;
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* エラー時の戻るボタン */
+.back-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover { background: rgba(212,168,76,0.1); }
+
+/* すでにチェックイン済みの場合 */
+.already-badge {
+  display: inline-block;
+  background: rgba(80,200,120,0.12);
+  border: 1px solid rgba(80,200,120,0.4);
+  border-radius: 3px;
+  padding: 6px 16px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--green);
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="logo">⚔ BJJ Guild</div>
+
+  <div class="card">
+
+    <!-- ローディング -->
+    <div class="state active" id="stateLoading">
+      <div class="spinner"></div>
+      <div class="state-title gold">チェックイン中...</div>
+    </div>
+
+    <!-- 成功 -->
+    <div class="state" id="stateSuccess">
+      <span class="icon">✅</span>
+      <div class="state-title green">チェックイン完了</div>
+      <div class="member-name" id="successName">—</div>
+      <div class="member-count">
+        今月 <span id="successMonthly">0</span> 回<br>
+        累計 <span id="successTotal">0</span> 回
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div class="close-hint" id="closeHint">3秒後に閉じます...</div>
+    </div>
+
+    <!-- すでにチェックイン済み -->
+    <div class="state" id="stateAlready">
+      <span class="icon">👋</span>
+      <div class="already-badge">本日チェックイン済み</div>
+      <div class="member-name" id="alreadyName">—</div>
+      <div class="member-count">
+        今月 <span id="alreadyMonthly">0</span> 回<br>
+        累計 <span id="alreadyTotal">0</span> 回
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar2"></div>
+      </div>
+      <div class="close-hint">3秒後に閉じます...</div>
+    </div>
+
+    <!-- エラー：会員が見つからない -->
+    <div class="state" id="stateNotFound">
+      <span class="icon">❓</span>
+      <div class="state-title red">会員が見つかりません</div>
+      <div class="member-count" style="margin-bottom:0;">
+        IDを確認してスタッフに声をかけてください
+      </div>
+      <button class="back-btn" onclick="window.close()">閉じる</button>
+    </div>
+
+    <!-- エラー：通信エラー -->
+    <div class="state" id="stateError">
+      <span class="icon">⚠️</span>
+      <div class="state-title red">通信エラー</div>
+      <div class="member-count" style="margin-bottom:0;">
+        Wi-Fiを確認してもう一度カードをかざしてください
+      </div>
+      <button class="back-btn" onclick="location.reload()">再試行</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ★★★ 設定 ★★★
+// ============================================================
+const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
+const CLOSE_DELAY   = 3000; // 完了後に閉じるまでの時間（ミリ秒）
+
+// URLパラメータからIDを取得
+const params = new URLSearchParams(window.location.search);
+const MEMBER_ID = params.get('id') || '';
+
+// ============================================================
+// 状態切り替え
+// ============================================================
+function showState(id) {
+  document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ============================================================
+// 完了後のカウントダウン → ページを閉じる
+// ============================================================
+function startCloseCountdown(barId, hintId) {
+  const bar   = document.getElementById(barId);
+  const hint  = document.getElementById(hintId || 'closeHint');
+  const start = Date.now();
+
+  function tick() {
+    const elapsed = Date.now() - start;
+    const remain  = Math.max(0, CLOSE_DELAY - elapsed);
+    const pct     = (remain / CLOSE_DELAY) * 100;
+
+    if (bar) bar.style.width = pct + '%';
+    if (hint) hint.textContent = `${Math.ceil(remain / 1000)}秒後に閉じます...`;
+
+    if (remain > 0) {
+      requestAnimationFrame(tick);
+    } else {
+      // ページを閉じる（閉じられない場合はブランクページへ）
+      try { window.close(); } catch(e) {}
+      setTimeout(() => { window.location.href = 'about:blank'; }, 300);
+    }
+  }
+  requestAnimationFrame(tick);
+}
+
+// ============================================================
+// チェックイン処理
+// ============================================================
+async function doCheckin() {
+  if (!MEMBER_ID) {
+    showState('stateNotFound');
+    return;
+  }
+
+  showState('stateLoading');
+
+  try {
+    const res  = await fetch(SHEET_API_URL, {
+      method: 'POST',
+      body:   JSON.stringify({ id: MEMBER_ID }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // チェックイン成功
+      document.getElementById('successName').textContent    = data.name || '';
+      document.getElementById('successMonthly').textContent = data.monthly;
+      document.getElementById('successTotal').textContent   = Number(data.total).toLocaleString();
+      showState('stateSuccess');
+      startCloseCountdown('progressBar', 'closeHint');
+
+    } else if (data.already) {
+      // 本日チェックイン済み
+      document.getElementById('alreadyName').textContent    = data.name || '';
+      document.getElementById('alreadyMonthly').textContent = data.monthly;
+      document.getElementById('alreadyTotal').textContent   = Number(data.total).toLocaleString();
+      showState('stateAlready');
+      startCloseCountdown('progressBar2', null);
+
+    } else if (data.error === 'member not found') {
+      showState('stateNotFound');
+
+    } else {
+      showState('stateError');
+    }
+
+  } catch(e) {
+    console.error(e);
+    showState('stateError');
+  }
+}
+
+// ============================================================
+// 起動
+// ============================================================
+doCheckin();
+</script>
+</body>
+</html>
