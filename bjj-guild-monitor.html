@@ -596,9 +596,20 @@ function initCheckin() {
 
 async function doCheckin() {
   if (!nfcMember || checkinDone) return;
+  checkinDone = true;
+
+  // ボタンがある場合のみ操作（手動モード）
   const btn = document.getElementById('checkinBtn');
-  btn.disabled = true;
-  btn.textContent = '送信中...';
+  if (btn) { btn.disabled = true; btn.textContent = '送信中...'; }
+
+  // auto=1 の場合はすぐに「処理中」表示
+  if (AUTO_CHECKIN) {
+    const done = document.getElementById('checkinDone');
+    document.getElementById('doneeName').textContent   = nfcMember.name;
+    document.getElementById('doneMonthly').textContent = nfcMember.monthly;
+    document.getElementById('doneTotal').textContent   = nfcMember.total.toLocaleString();
+    done.classList.add('show');
+  }
 
   try {
     const res  = await fetch(SHEET_API_URL, {
@@ -608,8 +619,7 @@ async function doCheckin() {
     const data = await res.json();
 
     if (data.success) {
-      checkinDone = true;
-      // 完了画面を表示
+      // 完了画面を更新（実際の数値に）
       document.getElementById('checkinPersonal').classList.remove('show');
       const done = document.getElementById('checkinDone');
       done.classList.add('show');
@@ -618,21 +628,18 @@ async function doCheckin() {
       document.getElementById('doneTotal').textContent    = data.total.toLocaleString();
       // データを再取得して反映
       setTimeout(() => fetchData(true), 1500);
-      // auto=1 の場合は4秒後にページをリセット（次の人のために）
-      if (AUTO_CHECKIN) {
-        setTimeout(() => {
-          // URLからidとautoを除いたページにリダイレクト
-          window.location.href = window.location.pathname;
-        }, 4000);
-      }
+      // 4秒後にページをリセット（次の人のために）
+      setTimeout(() => {
+        window.location.href = window.location.pathname;
+      }, 4000);
     } else {
-      btn.disabled = false;
-      btn.textContent = '⚔ チェックイン';
+      checkinDone = false;
+      if (btn) { btn.disabled = false; btn.textContent = '⚔ チェックイン'; }
       showMobileToast('エラーが発生しました');
     }
   } catch(e) {
-    btn.disabled = false;
-    btn.textContent = '⚔ チェックイン';
+    checkinDone = false;
+    if (btn) { btn.disabled = false; btn.textContent = '⚔ チェックイン'; }
     showMobileToast('通信エラーです');
   }
 }
