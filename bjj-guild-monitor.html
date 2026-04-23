@@ -770,7 +770,7 @@ async function fetchData(isRefresh = false) {
     showOverlay('refreshOv');
   }
 
-  if (!SHEET_API_URL || SHEET_API_URL === 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec') {
+  if (!SHEET_API_URL || SHEET_API_URL === 'DUMMY_NEVER_MATCH') {
     await sleep(800);
     allMembers = SAMPLE;
   } else {
