@@ -534,7 +534,7 @@ body::before {
 // ============================================================
 // ★★★ 設定 ★★★
 // ============================================================
-const SHEET_API_URL     = 'AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ';
+const SHEET_API_URL     = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
 const FETCH_INTERVAL_MS = 5 * 60 * 1000;
 const SLIDE_INTERVAL_MS = 15 * 1000;
 const SLIDES            = ['adult', 'kids_a', 'kids_b']; // スライド順
@@ -770,7 +770,7 @@ async function fetchData(isRefresh = false) {
     showOverlay('refreshOv');
   }
 
-  if (!SHEET_API_URL || SHEET_API_URL === 'AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ') {
+  if (!SHEET_API_URL || SHEET_API_URL === 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec') {
     await sleep(800);
     allMembers = SAMPLE;
   } else {
