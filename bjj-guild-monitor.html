@@ -478,7 +478,7 @@ body::before {
 // ============================================================
 const SHEET_API_URL     = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
 const FETCH_INTERVAL_MS = 5 * 60 * 1000;
-const SLIDE_INTERVAL_MS = 15 * 1000;
+const SLIDE_INTERVAL_MS = 8 * 1000;
 const SLIDES            = ['adult', 'kids_a', 'kids_b'];
 
 // ============================================================
@@ -509,9 +509,9 @@ function getTitle(member) {
   const isKids = member.category !== 'adult';
   const table  = isKids ? KIDS_TITLES : ADULT_TITLES;
   const steps  = table[member.belt] || Object.values(table)[0];
-  const monthly = member.monthly || 0;
-  let result = steps[0];
-  for (const s of steps) { if (monthly >= s.min) result = s; }
+  const total  = member.total || 0;
+  let result   = steps[0];
+  for (const s of steps) { if (total >= s.min) result = s; }
   return result;
 }
 function titleBadgeHTML(member) {
@@ -626,8 +626,8 @@ async function doCheckin() {
       document.getElementById('doneeName').textContent    = nfcMember.name;
       document.getElementById('doneMonthly').textContent  = data.monthly;
       document.getElementById('doneTotal').textContent    = data.total.toLocaleString();
-      // データを再取得して反映
-      setTimeout(() => fetchData(true), 1500);
+      // チェックイン直後に即座にランキングを更新
+      fetchData(true);
       // 4秒後にページをリセット（次の人のために）
       setTimeout(() => {
         window.location.href = window.location.pathname;
