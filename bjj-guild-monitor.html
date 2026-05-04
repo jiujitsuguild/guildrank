@@ -233,8 +233,12 @@ body::before {
 .b-yellow .b-dot  { background:#d4b820; }
 .b-orange { color:#e89040; border-color:rgba(208,104,32,0.5);  background:rgba(208,104,32,0.1); }
 .b-orange .b-dot  { background:#d06820; }
+.b-orange-black { color:#c87830; border-color:rgba(180,80,20,0.5); background:linear-gradient(135deg,rgba(208,104,32,0.15),rgba(30,30,30,0.15)); }
+.b-orange-black .b-dot { background:linear-gradient(135deg,#d06820,#222); }
 .b-green  { color:#50c870; border-color:rgba(42,136,64,0.5);   background:rgba(42,136,64,0.1); }
 .b-green .b-dot   { background:#2a8840; }
+.b-green-black { color:#40a860; border-color:rgba(42,136,64,0.5); background:linear-gradient(135deg,rgba(42,136,64,0.15),rgba(30,30,30,0.15)); }
+.b-green-black .b-dot { background:linear-gradient(135deg,#2a8840,#222); }
 
 /* 称号エフェクト */
 .title-flash { position:fixed; inset:0; z-index:200; pointer-events:none; opacity:0; }
@@ -499,11 +503,13 @@ const ADULT_TITLES = {
   black:  [{min:0,name:'道の求道者',level:'low'},{min:80,name:'畳の番人',level:'mid'},{min:160,name:'柔術の化身👑',level:'high'}],
 };
 const KIDS_TITLES = {
-  white:  [{min:0,name:'ガードの見習い',level:'low'},{min:30,name:'タップの洗礼',level:'mid'},{min:60,name:'スイープの使い手',level:'high'}],
-  gray:   [{min:0,name:'マウントの狩人',level:'low'},{min:30,name:'エスケープの達人',level:'mid'},{min:60,name:'サブミッションの影',level:'high'}],
-  yellow: [{min:0,name:'トライアングルの閃光',level:'low'},{min:30,name:'パスの鬼',level:'mid'},{min:60,name:'バックの支配者',level:'high'}],
-  orange: [{min:0,name:'チョークの刺客',level:'low'},{min:30,name:'トランジションの魔術師',level:'mid'},{min:60,name:'フローの使い手',level:'high'}],
-  green:  [{min:0,name:'ポジションの王',level:'low'},{min:30,name:'フィニッシャー',level:'mid'},{min:60,name:'道場の伝説👑',level:'high'}],
+  white:          [{min:0,name:'ガードの見習い',level:'low'},{min:30,name:'タップの洗礼',level:'mid'},{min:60,name:'スイープの使い手',level:'high'}],
+  gray:           [{min:0,name:'マウントの狩人',level:'low'},{min:30,name:'エスケープの達人',level:'mid'},{min:60,name:'サブミッションの影',level:'high'}],
+  yellow:         [{min:0,name:'トライアングルの閃光',level:'low'},{min:30,name:'パスの鬼',level:'mid'},{min:60,name:'バックの支配者',level:'high'}],
+  orange:         [{min:0,name:'チョークの刺客',level:'low'},{min:30,name:'トランジションの魔術師',level:'mid'},{min:60,name:'フローの使い手',level:'high'}],
+  'orange-black': [{min:0,name:'猛者の片鱗',level:'low'},{min:30,name:'修羅への目覚め',level:'mid'},{min:60,name:'黒の胎動',level:'high'}],
+  green:          [{min:0,name:'ポジションの王',level:'low'},{min:30,name:'フィニッシャー',level:'mid'},{min:60,name:'道場の伝説👑',level:'high'}],
+  'green-black':  [{min:0,name:'緑の覇者',level:'low'},{min:30,name:'若き武人',level:'mid'},{min:60,name:'道場の至宝👑',level:'high'}],
 };
 function getTitle(member) {
   const isKids = member.category !== 'adult';
@@ -521,18 +527,18 @@ function titleBadgeHTML(member) {
 
 // 帯バッジ
 const ADULT_BELT_LABELS = {white:'白帯',blue:'青帯',purple:'紫帯',brown:'茶帯',black:'黒帯'};
-const KIDS_BELT_LABELS  = {white:'白帯',gray:'グレー',yellow:'イエロー',orange:'オレンジ',green:'グリーン'};
+const KIDS_BELT_LABELS  = {white:'白帯',gray:'グレー',yellow:'イエロー',orange:'オレンジ','orange-black':'オレンジ黒',green:'グリーン','green-black':'グリーン黒'};
 function beltHTML(belt, category) {
   const isKids = category !== 'adult';
   const labels = isKids ? KIDS_BELT_LABELS : ADULT_BELT_LABELS;
-  const valid  = isKids ? ['white','gray','yellow','orange','green'] : ['white','blue','purple','brown','black'];
+  const valid  = isKids ? ['white','gray','yellow','orange','orange-black','green','green-black'] : ['white','blue','purple','brown','black'];
   const safe   = valid.includes(belt) ? belt : valid[0];
   return `<span class="b-badge b-${safe}"><span class="b-dot"></span>${labels[safe]||safe}</span>`;
 }
 
 // 帯昇格トラッカー
 const BELT_THRESHOLDS = (() => {
-  const steps = [{from:'white',to:'blue',need:250},{from:'blue',to:'purple',need:300},{from:'purple',to:'brown',need:300},{from:'brown',to:'black',need:400}];
+  const steps = [{from:'white',to:'blue',need:200},{from:'blue',to:'purple',need:250},{from:'purple',to:'brown',need:250},{from:'brown',to:'black',need:350}];
   let acc = 0;
   return steps.map(s => { const start=acc; acc+=s.need; return {...s,start,end:acc}; });
 })();
