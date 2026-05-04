@@ -458,7 +458,13 @@ body::before {
   </div>
 
   <div class="m-search-section">
-    <span class="m-search-label">▸ 帯昇格トラッカー（アダルト）</span>
+    <span class="m-search-label">▸ 帯昇格トラッカー</span>
+    <div style="display:flex; gap:6px; margin-bottom:8px;">
+      <button id="trackerTabAdult" onclick="switchTrackerTab('adult')"
+        style="flex:1; padding:7px; background:var(--red); color:#fff; border:none; border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">ADULT</button>
+      <button id="trackerTabKids" onclick="switchTrackerTab('kids')"
+        style="flex:1; padding:7px; background:var(--card); color:var(--muted); border:1px solid var(--border); border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">KIDS</button>
+    </div>
     <div class="m-search-row">
       <input class="m-search-input" id="searchInput" type="text" placeholder="名前を入力..." maxlength="20">
       <button class="m-search-btn" onclick="searchTracker()">検索</button>
@@ -505,12 +511,26 @@ const ADULT_TITLES = {
 const KIDS_TITLES = {
   white:          [{min:0,name:'ガードの見習い',level:'low'},{min:30,name:'タップの洗礼',level:'mid'},{min:60,name:'スイープの使い手',level:'high'}],
   gray:           [{min:0,name:'マウントの狩人',level:'low'},{min:30,name:'エスケープの達人',level:'mid'},{min:60,name:'サブミッションの影',level:'high'}],
-  yellow:         [{min:0,name:'トライアングルの閃光',level:'low'},{min:30,name:'パスの鬼',level:'mid'},{min:60,name:'バックの支配者',level:'high'}],
-  orange:         [{min:0,name:'チョークの刺客',level:'low'},{min:30,name:'トランジションの魔術師',level:'mid'},{min:60,name:'フローの使い手',level:'high'}],
-  'orange-black': [{min:0,name:'猛者の片鱗',level:'low'},{min:30,name:'修羅への目覚め',level:'mid'},{min:60,name:'黒の胎動',level:'high'}],
-  green:          [{min:0,name:'ポジションの王',level:'low'},{min:30,name:'フィニッシャー',level:'mid'},{min:60,name:'道場の伝説👑',level:'high'}],
-  'green-black':  [{min:0,name:'緑の覇者',level:'low'},{min:30,name:'若き武人',level:'mid'},{min:60,name:'道場の至宝👑',level:'high'}],
+  yellow:         [{min:0,name:'トライアングルの閃光',level:'low'},{min:35,name:'パスの鬼',level:'mid'},{min:65,name:'バックの支配者',level:'high'}],
+  orange:         [{min:0,name:'チョークの刺客',level:'low'},{min:40,name:'トランジションの魔術師',level:'mid'},{min:75,name:'フローの使い手',level:'high'}],
+  'orange-black': [{min:0,name:'猛者の片鱗',level:'low'},{min:40,name:'修羅への目覚め',level:'mid'},{min:75,name:'黒の胎動',level:'high'}],
+  green:          [{min:0,name:'ポジションの王',level:'low'},{min:40,name:'フィニッシャー',level:'mid'},{min:75,name:'道場の伝説👑',level:'high'}],
+  'green-black':  [{min:0,name:'緑の覇者',level:'low'},{min:40,name:'若き武人',level:'mid'},{min:75,name:'道場の至宝👑',level:'high'}],
 };
+
+// キッズ帯昇格トラッカー閾値
+const KIDS_BELT_THRESHOLDS = (() => {
+  const steps = [
+    {from:'white',        to:'gray',         need:80},
+    {from:'gray',         to:'yellow',       need:80},
+    {from:'yellow',       to:'orange',       need:90},
+    {from:'orange',       to:'orange-black', need:100},
+    {from:'orange-black', to:'green',        need:100},
+    {from:'green',        to:'green-black',  need:100},
+  ];
+  let acc=0;
+  return steps.map(s=>{const start=acc; acc+=s.need; return {...s,start,end:acc};});
+})();
 function getTitle(member) {
   const isKids = member.category !== 'adult';
   const table  = isKids ? KIDS_TITLES : ADULT_TITLES;
@@ -877,101 +897,75 @@ function switchMobileTab(cat) {
 }
 
 // 帯昇格トラッカー
+let trackerMode = 'adult';
+function switchTrackerTab(mode) {
+  trackerMode = mode;
+  const btnA = document.getElementById('trackerTabAdult');
+  const btnK = document.getElementById('trackerTabKids');
+  if (mode === 'adult') {
+    btnA.style.background='var(--red)'; btnA.style.color='#fff'; btnA.style.border='none';
+    btnK.style.background='var(--card)'; btnK.style.color='var(--muted)'; btnK.style.border='1px solid var(--border)';
+    document.getElementById('searchInput').placeholder='名前を入力...';
+  } else {
+    btnK.style.background='var(--kids-a,#5aaff0)'; btnK.style.color='#fff'; btnK.style.border='none';
+    btnA.style.background='var(--card)'; btnA.style.color='var(--muted)'; btnA.style.border='1px solid var(--border)';
+    document.getElementById('searchInput').placeholder='名前を入力...';
+  }
+  document.getElementById('trackerResult').innerHTML='';
+}
+
 function searchTracker() {
   const query=document.getElementById('searchInput').value.trim();
   const result=document.getElementById('trackerResult');
   if (!query){result.innerHTML='';return;}
-  const member=allMembers.find(m=>m.name.includes(query)&&m.category==='adult');
-  if (!member) {
-    const km=allMembers.find(m=>m.name.includes(query)&&m.category!=='adult');
-    result.innerHTML=km
-      ?`<div class="tracker-kids-note">「${km.name}」はキッズカテゴリのため<br>帯昇格トラッカーはアダルトのみ対応しています</div>`
-      :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
-    return;
-  }
-  const total=member.total;
-  const stepsHTML=BELT_THRESHOLDS.map(step=>{
-    const isDone=total>=step.end; const isInProg=!isDone&&total>=step.start;
-    const filled=isDone?step.need:isInProg?total-step.start:0;
-    const pct=isDone?100:isInProg?Math.round((filled/step.need)*100):0;
-    const barCls=isDone?'done':isInProg?'prog':'none';
-    const countTxt=isDone?'達成 ✓':`${filled} / ${step.need} 回`;
-    return `<div class="tracker-step">
-      <div class="ts-header">
-        <div class="ts-label">${beltHTML(step.from,'adult')}<span style="color:var(--muted)">→</span>${beltHTML(step.to,'adult')}</div>
-        <span class="ts-count ${isDone?'done':''}">${countTxt}</span>
-      </div>
-      <div class="ts-bar-wrap"><div class="ts-bar ${barCls}" style="width:${Math.max(pct,barCls==='none'?0:2)}%"></div></div>
-    </div>`;
-  }).join('');
-  result.innerHTML=`
-    <div class="m-tracker show">
-      <div class="m-tracker-header">
-        <div class="m-tracker-avatar">${initial(member.name)}</div>
-        <div>
-          <div class="m-tracker-name">${member.name}</div>
-          <div class="m-tracker-meta">${beltHTML(member.belt,'adult')} &nbsp; 今月 <span>${member.monthly}</span> 回</div>
+
+  if (trackerMode==='adult') {
+    const member=allMembers.find(m=>m.name.includes(query)&&m.category==='adult');
+    if (!member) {
+      const km=allMembers.find(m=>m.name.includes(query)&&m.category!=='adult');
+      result.innerHTML=km
+        ?`<div class="tracker-kids-note">「${km.name}」はキッズ会員です。<br>KIDSタブに切り替えて検索してください</div>`
+        :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
+      return;
+    }
+    const total=member.total;
+    const stepsHTML=BELT_THRESHOLDS.map(step=>{
+      const isDone=total>=step.end; const isInProg=!isDone&&total>=step.start;
+      const filled=isDone?step.need:isInProg?total-step.start:0;
+      const pct=isDone?100:isInProg?Math.round((filled/step.need)*100):0;
+      const barCls=isDone?'done':isInProg?'prog':'none';
+      const countTxt=isDone?'達成 ✓':`${filled} / ${step.need} 回`;
+      return `<div class="tracker-step">
+        <div class="ts-header">
+          <div class="ts-label">${beltHTML(step.from,'adult')}<span style="color:var(--muted)">→</span>${beltHTML(step.to,'adult')}</div>
+          <span class="ts-count ${isDone?'done':''}">${countTxt}</span>
         </div>
-      </div>
-      <div class="tracker-steps">${stepsHTML}</div>
-      <div class="tracker-total">
-        <span class="tt-label">累計参加回数</span>
-        <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">回</span></div>
-      </div>
-    </div>`;
-}
-document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')searchTracker();});
-
-// Toast
-function showMobileToast(msg) {
-  const el=document.getElementById('mToast');
-  el.textContent=msg; void el.offsetWidth;
-  el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2600);
-}
-
-// 時計
-const DAYS_JP=['日','月','火','水','木','金','土'];
-function updateClock() {
-  const now=new Date();
-  const hh=String(now.getHours()).padStart(2,'0');
-  const mm=String(now.getMinutes()).padStart(2,'0');
-  const ss=String(now.getSeconds()).padStart(2,'0');
-  const ce=document.getElementById('pcClock'); if(ce) ce.textContent=`${hh}:${mm}:${ss}`;
-  const de=document.getElementById('pcDate');  if(de) de.textContent=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}（${DAYS_JP[now.getDay()]}）`;
-}
-setInterval(updateClock,1000); updateClock();
-
-function tickFetch() {
-  fetchElapsed+=1000;
-  const remain=Math.max(0,FETCH_INTERVAL_MS-fetchElapsed);
-  const rm=Math.floor(remain/60000); const rs=Math.floor((remain%60000)/1000);
-  const ne=document.getElementById('pcNextFetch'); if(ne) ne.textContent=`Next: ${rm}:${String(rs).padStart(2,'0')}`;
-  const fb=document.getElementById('fetchBar');    if(fb) fb.style.width=Math.min((fetchElapsed/FETCH_INTERVAL_MS)*100,100)+'%';
-}
-setInterval(tickFetch,1000);
-
-function setLastUpdate() {
-  const now=new Date();
-  const ts=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const pe=document.getElementById('pcLastUpd');    if(pe) pe.textContent=`Last Updated: ${ts}`;
-  const me=document.getElementById('mLastUpd');     if(me) me.textContent=`Last Updated: ${ts}`;
-  const pm=document.getElementById('pcMonthLabel'); if(pm) pm.textContent=getCurrentMonthLabel();
-  const mm=document.getElementById('mMonthLabel');  if(mm) mm.textContent=getCurrentMonthLabel();
-}
-
-function showOverlay(id)   { document.getElementById(id)?.classList.add('show'); }
-function hideAllOverlays() { ['loadingOv','refreshOv'].forEach(id=>document.getElementById(id)?.classList.remove('show')); }
-
-// サンプルデータ（フォールバック用）
-const SAMPLE = [
-  {id:'001',name:'中村 剛',  monthly:20,total:1300,belt:'black', category:'adult'},
-  {id:'002',name:'田中 誠',  monthly:18,total:980, belt:'black', category:'adult'},
-  {id:'101',name:'山田 陽',  monthly:22,total:360, belt:'green', category:'kids_a'},
-  {id:'201',name:'橋本 空',  monthly:20,total:280, belt:'green', category:'kids_b'},
-];
-
-fetchData();
-</script>
-</body>
-</html>
+        <div class="ts-bar-wrap"><div class="ts-bar ${barCls}" style="width:${Math.max(pct,barCls==='none'?0:2)}%"></div></div>
+      </div>`;
+    }).join('');
+    result.innerHTML=`
+      <div class="m-tracker show">
+        <div class="m-tracker-header">
+          <div class="m-tracker-avatar">${initial(member.name)}</div>
+          <div>
+            <div class="m-tracker-name">${member.name}</div>
+            <div class="m-tracker-meta">${beltHTML(member.belt,'adult')} &nbsp; 今月 <span>${member.monthly}</span> 回</div>
+          </div>
+        </div>
+        <div class="tracker-steps">${stepsHTML}</div>
+        <div class="tracker-total">
+          <span class="tt-label">累計参加回数</span>
+          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">回</span></div>
+        </div>
+      </div>`;
+  } else {
+    // キッズトラッカー
+    const member=allMembers.find(m=>m.name.includes(query)&&m.category!=='adult');
+    if (!member) {
+      const am=allMembers.find(m=>m.name.includes(query)&&m.category==='adult');
+      result.innerHTML=am
+        ?`<div class="tracker-kids-note">「${am.name}」はアダルト会員です。<br>ADULTタブに切り替えて検索してください</div>`
+        :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
+      return;
+    }
+    cons
