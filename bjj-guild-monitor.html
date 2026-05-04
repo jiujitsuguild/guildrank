@@ -968,4 +968,90 @@ function searchTracker() {
         :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
       return;
     }
-    cons
+    const total=member.total;
+    const stepsHTML=KIDS_BELT_THRESHOLDS.map(step=>{
+      const isDone=total>=step.end; const isInProg=!isDone&&total>=step.start;
+      const filled=isDone?step.need:isInProg?total-step.start:0;
+      const pct=isDone?100:isInProg?Math.round((filled/step.need)*100):0;
+      const barCls=isDone?'done':isInProg?'prog':'none';
+      const countTxt=isDone?'達成 ✓':`${filled} / ${step.need} 回`;
+      return `<div class="tracker-step">
+        <div class="ts-header">
+          <div class="ts-label">${beltHTML(step.from,'kids_a')}<span style="color:var(--muted)">→</span>${beltHTML(step.to,'kids_a')}</div>
+          <span class="ts-count ${isDone?'done':''}">${countTxt}</span>
+        </div>
+        <div class="ts-bar-wrap"><div class="ts-bar ${barCls}" style="width:${Math.max(pct,barCls==='none'?0:2)}%"></div></div>
+      </div>`;
+    }).join('');
+    result.innerHTML=`
+      <div class="m-tracker show">
+        <div class="m-tracker-header">
+          <div class="m-tracker-avatar" style="background:linear-gradient(135deg,var(--kids-a,#5aaff0),#3888cc);">${initial(member.name)}</div>
+          <div>
+            <div class="m-tracker-name">${member.name}</div>
+            <div class="m-tracker-meta">${beltHTML(member.belt,member.category)} &nbsp; 今月 <span>${member.monthly}</span> 回</div>
+          </div>
+        </div>
+        <div class="tracker-steps">${stepsHTML}</div>
+        <div class="tracker-total">
+          <span class="tt-label">累計参加回数</span>
+          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">回</span></div>
+        </div>
+      </div>`;
+  }
+}
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')searchTracker();});
+
+// Toast
+function showMobileToast(msg) {
+  const el=document.getElementById('mToast');
+  el.textContent=msg; void el.offsetWidth;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+// 時計
+const DAYS_JP=['日','月','火','水','木','金','土'];
+function updateClock() {
+  const now=new Date();
+  const hh=String(now.getHours()).padStart(2,'0');
+  const mm=String(now.getMinutes()).padStart(2,'0');
+  const ss=String(now.getSeconds()).padStart(2,'0');
+  const ce=document.getElementById('pcClock'); if(ce) ce.textContent=`${hh}:${mm}:${ss}`;
+  const de=document.getElementById('pcDate');  if(de) de.textContent=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}（${DAYS_JP[now.getDay()]}）`;
+}
+setInterval(updateClock,1000); updateClock();
+
+function tickFetch() {
+  fetchElapsed+=1000;
+  const remain=Math.max(0,FETCH_INTERVAL_MS-fetchElapsed);
+  const rm=Math.floor(remain/60000); const rs=Math.floor((remain%60000)/1000);
+  const ne=document.getElementById('pcNextFetch'); if(ne) ne.textContent=`Next: ${rm}:${String(rs).padStart(2,'0')}`;
+  const fb=document.getElementById('fetchBar');    if(fb) fb.style.width=Math.min((fetchElapsed/FETCH_INTERVAL_MS)*100,100)+'%';
+}
+setInterval(tickFetch,1000);
+
+function setLastUpdate() {
+  const now=new Date();
+  const ts=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const pe=document.getElementById('pcLastUpd');    if(pe) pe.textContent=`Last Updated: ${ts}`;
+  const me=document.getElementById('mLastUpd');     if(me) me.textContent=`Last Updated: ${ts}`;
+  const pm=document.getElementById('pcMonthLabel'); if(pm) pm.textContent=getCurrentMonthLabel();
+  const mm=document.getElementById('mMonthLabel');  if(mm) mm.textContent=getCurrentMonthLabel();
+}
+
+function showOverlay(id)   { document.getElementById(id)?.classList.add('show'); }
+function hideAllOverlays() { ['loadingOv','refreshOv'].forEach(id=>document.getElementById(id)?.classList.remove('show')); }
+
+// サンプルデータ（フォールバック用）
+const SAMPLE = [
+  {id:'001',name:'中村 剛',  monthly:20,total:1300,belt:'black', category:'adult'},
+  {id:'002',name:'田中 誠',  monthly:18,total:980, belt:'black', category:'adult'},
+  {id:'101',name:'山田 陽',  monthly:22,total:360, belt:'green', category:'kids_a'},
+  {id:'201',name:'橋本 空',  monthly:20,total:280, belt:'green', category:'kids_b'},
+];
+
+fetchData();
+</script>
+</body>
+</html>
