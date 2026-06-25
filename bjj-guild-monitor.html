@@ -60,7 +60,13 @@ body::before {
 @keyframes breathe { from{opacity:0.6;transform:scale(1);} to{opacity:1;transform:scale(1.08);} }
 
 /* PC画面 */
-.pc-screen { width:1920px; height:1080px; display:grid; grid-template-rows:110px 1fr 52px; position:relative; z-index:1; transition:opacity 0.6s ease; }
+.scale-wrapper {
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+  overflow: hidden;
+}
+.pc-screen { width:1920px; height:1080px; display:grid; grid-template-rows:110px 1fr 52px; position:relative; z-index:1; transition:opacity 0.6s ease; flex-shrink:0; }
 .pc-screen.fading { opacity:0; }
 .pc-header { display:flex; align-items:center; justify-content:space-between; padding:0 56px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,rgba(212,168,76,0.04),transparent); position:relative; }
 .pc-header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--gold-light) 50%,var(--gold) 70%,transparent); transition:background 0.6s ease; }
@@ -394,6 +400,7 @@ body::before {
 </div>
 
 <!-- PC画面 -->
+<div class="scale-wrapper" id="scaleWrapper">
 <div class="pc-screen" id="pcScreen">
   <header class="pc-header" id="pcHeader">
     <div class="hdr-left">
@@ -427,6 +434,7 @@ body::before {
       <div class="bar-wrap"><div class="bar-fill" id="fetchBar"></div></div>
     </div>
   </footer>
+</div>
 </div>
 
 <!-- スマホ画面 -->
@@ -483,6 +491,25 @@ body::before {
 <div class="m-toast" id="mToast"></div>
 
 <script>
+// ============================================================
+// ★★★ 画面解像度の自動スケーリング ★★★
+// 1920x1080デザインを基準に、どんな解像度でも
+// 16:9比率を保ったまま画面いっぱいに自動調整
+// ============================================================
+function fitScale() {
+  const wrapper = document.getElementById('scaleWrapper');
+  const screen  = document.getElementById('pcScreen');
+  if (!wrapper || !screen) return;
+  const scaleX = window.innerWidth  / 1920;
+  const scaleY = window.innerHeight / 1080;
+  const scale  = Math.min(scaleX, scaleY);
+  screen.style.transform = `scale(${scale})`;
+  screen.style.transformOrigin = 'center center';
+}
+window.addEventListener('resize', fitScale);
+window.addEventListener('orientationchange', fitScale);
+fitScale();
+
 // ============================================================
 // ★★★ 設定 ★★★
 // ============================================================
