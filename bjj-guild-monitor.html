@@ -273,6 +273,7 @@ body::before {
 .mobile-screen { display:none; min-height:100vh; background:var(--bg); flex-direction:column; }
 @media (max-width:1024px) {
   body { overflow:auto; }
+  .scale-wrapper { display:none !important; }
   .pc-screen     { display:none !important; }
   .mobile-screen { display:flex; }
   .overlay       { display:none !important; }
@@ -500,6 +501,7 @@ function fitScale() {
   const wrapper = document.getElementById('scaleWrapper');
   const screen  = document.getElementById('pcScreen');
   if (!wrapper || !screen) return;
+  if (window.innerWidth <= 1024) return; // スマホ表示時はスケーリング処理をスキップ
   const scaleX = window.innerWidth  / 1920;
   const scaleY = window.innerHeight / 1080;
   const scale  = Math.min(scaleX, scaleY);
