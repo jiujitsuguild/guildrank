@@ -279,6 +279,11 @@ body::before {
   .overlay       { display:none !important; }
   #confettiCanvas,.title-flash,.title-popup { display:none !important; }
 }
+/* TV/FireTVブラウザ対策：?pc=1 をURLに付けるとPC画面を強制表示 */
+html.force-pc .mobile-screen { display:none !important; }
+html.force-pc .scale-wrapper { display:flex !important; }
+html.force-pc .pc-screen     { display:grid !important; }
+html.force-pc body { overflow:hidden !important; }
 .m-header { padding:18px 20px 12px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,rgba(212,168,76,0.06),transparent); position:relative; }
 .m-header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold) 40%,var(--gold-light) 50%,var(--gold) 60%,transparent); }
 .m-title { font-family:'Cinzel',serif; font-size:22px; font-weight:900; letter-spacing:3px; background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,var(--gold-dim)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-transform:uppercase; }
@@ -501,13 +506,22 @@ function fitScale() {
   const wrapper = document.getElementById('scaleWrapper');
   const screen  = document.getElementById('pcScreen');
   if (!wrapper || !screen) return;
-  if (window.innerWidth <= 1024) return; // スマホ表示時はスケーリング処理をスキップ
+  const forcePC = document.documentElement.classList.contains('force-pc');
+  if (window.innerWidth <= 1024 && !forcePC) return; // スマホ表示時はスケーリング処理をスキップ
   const scaleX = window.innerWidth  / 1920;
   const scaleY = window.innerHeight / 1080;
   const scale  = Math.min(scaleX, scaleY);
   screen.style.transform = `scale(${scale})`;
   screen.style.transformOrigin = 'center center';
 }
+// TV/FireTVブラウザがウィンドウ幅を誤検知してスマホUIになってしまう場合の対策
+// URLに ?pc=1 を付けると強制的にPC画面（ランキングモニター）を表示する
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('pc') === '1') {
+    document.documentElement.classList.add('force-pc');
+  }
+})();
 window.addEventListener('resize', fitScale);
 window.addEventListener('orientationchange', fitScale);
 fitScale();
@@ -535,7 +549,21 @@ const ADULT_TITLES = {
   blue:   [{min:0,name:'双脚の狩人',level:'low'},{min:80,name:'崩しの使い手',level:'mid'},{min:160,name:'制圧の申し子',level:'high'}],
   purple: [{min:0,name:'千手の術師',level:'low'},{min:80,name:'背後霊',level:'mid'},{min:160,name:'関節の支配者',level:'high'}],
   brown:  [{min:0,name:'呼吸の読者',level:'low'},{min:80,name:'沈黙の絞首人',level:'mid'},{min:160,name:'畳の亡霊',level:'high'}],
-  black:  [{min:0,name:'道の求道者',level:'low'},{min:80,name:'畳の番人',level:'mid'},{min:160,name:'柔術の化身👑',level:'high'}],
+  black:  [
+    {min:1050,name:'拳に道を見る者',level:'low'},
+    {min:1150,name:'間を制す者',level:'low'},
+    {min:1250,name:'無音の一手',level:'low'},
+    {min:1400,name:'影なき技',level:'low'},
+    {min:1550,name:'流転の理を知る者',level:'mid'},
+    {min:1700,name:'千の組手を超えた者',level:'mid'},
+    {min:1900,name:'道場を支える柱',level:'mid'},
+    {min:2100,name:'技の継承者',level:'mid'},
+    {min:2350,name:'静寂を纏う者',level:'mid'},
+    {min:2600,name:'不動の境地',level:'high'},
+    {min:2900,name:'柔術の化身👑',level:'high'},
+    {min:3300,name:'時を超えた達人👑',level:'high'},
+    {min:3800,name:'ギルドの永遠👑',level:'high'},
+  ],
 };
 const KIDS_TITLES = {
   white:          [{min:0,name:'ガードの見習い',level:'low'},{min:30,name:'タップの洗礼',level:'mid'},{min:60,name:'スイープの使い手',level:'high'}],
@@ -602,6 +630,7 @@ let slideRaf     = null;
 let slideStart   = null;
 let fetchElapsed = 0;
 let prevTitles   = {};
+let prevBelts    = {};
 let nfcMember    = null; // NFCで特定された会員
 let checkinDone  = false;
 
@@ -711,9 +740,34 @@ function checkTitleChanges(members) {
     const key      = `${m.name}_${m.category}`;
     const newTitle = getTitle(m).name;
     const oldTitle = prevTitles[key];
-    if (oldTitle && oldTitle !== newTitle) fireTitleEffect(m.name, newTitle);
+    // 帯昇格チェック（称号より優先・より派手な演出）
+    const newBelt = m.belt;
+    const oldBelt = prevBelts[key];
+    if (oldBelt && oldBelt !== newBelt) {
+      firePromotionEffect(m.name, newBelt, m.category);
+    } else if (oldTitle && oldTitle !== newTitle) {
+      fireTitleEffect(m.name, newTitle);
+    }
     prevTitles[key] = newTitle;
+    prevBelts[key]  = newBelt;
   }
+}
+// 帯昇格の専用演出（称号変化よりド派手に）
+function firePromotionEffect(name, newBelt, category) {
+  const labels = (category === 'adult') ? ADULT_BELT_LABELS : KIDS_BELT_LABELS;
+  const beltLabel = (labels && labels[newBelt]) || newBelt;
+  const flash = document.getElementById('titleFlash');
+  flash.className = 'title-flash'; void flash.offsetWidth;
+  flash.className = 'title-flash fire';
+  document.getElementById('popupName').textContent  = name;
+  document.getElementById('popupTitle').textContent = `🎊 ${beltLabel} 昇格！ 🎊`;
+  const popup = document.getElementById('titlePopup');
+  popup.className = 'title-popup'; void popup.offsetWidth;
+  popup.className = 'title-popup fire';
+  // 紙吹雪を3連発で豪華に
+  fireConfetti();
+  setTimeout(fireConfetti, 700);
+  setTimeout(fireConfetti, 1400);
 }
 function fireTitleEffect(name, titleName) {
   const flash = document.getElementById('titleFlash');
@@ -771,10 +825,14 @@ async function fetchData(isRefresh = false) {
     const data = await res.json();
     if (data.error || !Array.isArray(data.members)) throw new Error(data.error||'invalid');
     allMembers = data.members;
+    isOnline = true;
+    lastGoodFetch = Date.now();
   } catch(e) {
     console.error(e);
-    if (!allMembers.length) allMembers = SAMPLE;
+    // サンプルデータは使わない：前回の正常データを表示し続ける
+    isOnline = false;
   }
+  updateConnBadge();
 
   // NFCで特定された会員を探す
   if (NFC_MEMBER_ID) {
@@ -1072,13 +1130,60 @@ function setLastUpdate() {
 function showOverlay(id)   { document.getElementById(id)?.classList.add('show'); }
 function hideAllOverlays() { ['loadingOv','refreshOv'].forEach(id=>document.getElementById(id)?.classList.remove('show')); }
 
-// サンプルデータ（フォールバック用）
-const SAMPLE = [
-  {id:'001',name:'中村 剛',  monthly:20,total:1300,belt:'black', category:'adult'},
-  {id:'002',name:'田中 誠',  monthly:18,total:980, belt:'black', category:'adult'},
-  {id:'101',name:'山田 陽',  monthly:22,total:360, belt:'green', category:'kids_a'},
-  {id:'201',name:'橋本 空',  monthly:20,total:280, belt:'green', category:'kids_b'},
-];
+// ============================================================
+// 接続状態バッジ（LIVE / OFFLINE）
+// ============================================================
+let isOnline = true;
+let lastGoodFetch = 0;
+function updateConnBadge() {
+  let badge = document.getElementById('connBadge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'connBadge';
+    badge.style.cssText = 'position:fixed;top:12px;right:14px;z-index:9999;font-family:sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:20px;pointer-events:none;transition:all 0.3s;';
+    document.body.appendChild(badge);
+  }
+  if (isOnline) {
+    badge.textContent = '● LIVE';
+    badge.style.background = 'rgba(80,200,120,0.15)';
+    badge.style.color = '#50c878';
+    badge.style.border = '1px solid rgba(80,200,120,0.4)';
+  } else {
+    const mins = lastGoodFetch ? Math.floor((Date.now()-lastGoodFetch)/60000) : '?';
+    badge.textContent = `⚠ 接続待ち（${mins}分前のデータ）`;
+    badge.style.background = 'rgba(228,90,90,0.15)';
+    badge.style.color = '#e45a5a';
+    badge.style.border = '1px solid rgba(228,90,90,0.4)';
+  }
+}
+
+// ============================================================
+// 画面スリープ防止（Wake Lock API・対応ブラウザのみ）
+// ============================================================
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch(e) { /* 非対応・省電力モードなどは無視 */ }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+requestWakeLock();
+
+// ============================================================
+// 毎日1回の自動リロード（午前4時・メモリリフレッシュ）
+// ============================================================
+(function scheduleDailyReload() {
+  const now = new Date();
+  const next = new Date(now);
+  next.setHours(4, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 1);
+  setTimeout(() => location.reload(), next - now);
+})();
 
 fetchData();
 </script>
