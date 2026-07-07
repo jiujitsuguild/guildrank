@@ -364,7 +364,8 @@ html.force-pc body { overflow:hidden !important; }
 .m-p-card.p1-kids-b { border-color:var(--kids-b-dim); box-shadow:0 0 20px rgba(80,208,160,0.3); }
 .m-p-rank  { font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:4px; }
 .m-p-av    { width:36px; height:36px; border-radius:50%; margin:0 auto 6px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-size:14px; font-weight:700; color:var(--bg); }
-.m-p-name    { font-size:12px; font-weight:700; color:var(--white); margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m-p-name    { font-size:12px; font-weight:700; color:var(--white); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.m-p-title   { font-size:8.5px; color:var(--gold); letter-spacing:0.5px; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; opacity:0.9; }
 .m-p-monthly { font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:var(--gold); }
 .m-p-total   { font-size:9px; color:var(--muted); margin-top:2px; }
 .m-r-row { display:grid; grid-template-columns:36px 1fr auto; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid rgba(36,48,80,0.5); }
@@ -962,6 +963,7 @@ function switchMobileTab(cat) {
           <div class="m-p-rank">${isFirst?'👑':''} ${rankLabel(rn)}</div>
           <div class="m-p-av" style="background:${avatarBg(rn,cat)}">${initial(m.name)}</div>
           <div class="m-p-name">${m.name}</div>
+          <div class="m-p-title">${getTitle(m).name}</div>
           <div class="m-p-monthly" style="color:${isFirst?'var(--gold)':'var(--white-dim)'}">${m.monthly}</div>
           <div class="m-p-total">累計 ${m.total.toLocaleString()}回</div>
         </div>`;
