@@ -446,9 +446,11 @@ html.force-pc body { overflow:hidden !important; }
 
 <!-- スマホ画面 -->
 <div class="mobile-screen" id="mobileScreen">
-  <div class="m-header">
+  <div class="m-header" style="position:relative;">
     <div class="m-title">Guild Ranking</div>
     <div class="m-sub">柔術ギルド — <span id="mMonthLabel">Monthly</span></div>
+    <button id="langToggle" onclick="toggleLang()"
+      style="position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--muted); font-size:11px; letter-spacing:1px; padding:5px 10px; border-radius:20px; cursor:pointer; font-family:'Cinzel',serif;">🇧🇷 PT</button>
   </div>
 
   <!-- チェックインセクション -->
@@ -488,9 +490,9 @@ html.force-pc body { overflow:hidden !important; }
   </div>
 
   <div class="m-tabs">
-    <button class="m-tab active-adult" id="tabAdult"  onclick="switchMobileTab('adult')">Adult</button>
-    <button class="m-tab"              id="tabKidsA"  onclick="switchMobileTab('kids_a')">Kids A</button>
-    <button class="m-tab"              id="tabKidsB"  onclick="switchMobileTab('kids_b')">Kids B</button>
+    <button class="m-tab active-adult" id="tabAdult"  onclick="switchMobileTab('adult')">アダルト</button>
+    <button class="m-tab"              id="tabKidsA"  onclick="switchMobileTab('kids_a')">キッズA</button>
+    <button class="m-tab"              id="tabKidsB"  onclick="switchMobileTab('kids_b')">キッズB</button>
   </div>
   <div class="m-list" id="mList"></div>
   <div class="m-footer"><div class="m-last-upd" id="mLastUpd">Last Updated: —</div></div>
@@ -531,6 +533,100 @@ fitScale();
 // ★★★ 設定 ★★★
 // ============================================================
 const SHEET_API_URL     = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
+
+// ============================================================
+// 言語切り替え（スマホ画面のみ）
+// ============================================================
+let currentLang = 'ja';
+const LANG = {
+  ja: {
+    welcomeBack: 'Welcome Back',
+    checkinBtn: '⚔ チェックイン',
+    checkinSending: '送信中...',
+    checkinDoneTitle: 'チェックイン完了',
+    monthlyLabel: '今月',
+    totalLabel: '累計',
+    times: '回',
+    trackerLabel: '▸ 帯昇格トラッカー',
+    searchPlaceholder: '名前を入力...',
+    searchBtn: '検索',
+    tabAdult: 'アダルト',
+    tabKidsA: 'キッズA',
+    tabKidsB: 'キッズB',
+    trackerAdult: 'ADULT',
+    trackerKids: 'KIDS',
+    achieved: '達成 ✓',
+    cumulativeParticipation: '累計参加回数',
+    notFound: (q) => `「${q}」が見つかりませんでした`,
+    isAdultMember: (name) => `「${name}」はアダルト会員です。<br>ADULTタブに切り替えて検索してください`,
+    isKidsMember: (name) => `「${name}」はキッズ会員です。<br>KIDSタブに切り替えて検索してください`,
+    lastUpdated: 'Last Updated',
+    errorGeneric: 'エラーが発生しました',
+    errorNetwork: '通信エラーです',
+    nfcHint: 'NFCカードでチェックインしてください',
+  },
+  pt: {
+    welcomeBack: 'Bem-vindo(a)',
+    checkinBtn: '⚔ Check-in',
+    checkinSending: 'Enviando...',
+    checkinDoneTitle: 'Check-in concluído',
+    monthlyLabel: 'Este mês',
+    totalLabel: 'Total',
+    times: 'vezes',
+    trackerLabel: '▸ Rastreador de Faixa',
+    searchPlaceholder: 'Digite o nome...',
+    searchBtn: 'Buscar',
+    tabAdult: 'Adulto',
+    tabKidsA: 'Kids A',
+    tabKidsB: 'Kids B',
+    trackerAdult: 'ADULTO',
+    trackerKids: 'KIDS',
+    achieved: 'Concluído ✓',
+    cumulativeParticipation: 'Total de participações',
+    notFound: (q) => `"${q}" não foi encontrado`,
+    isAdultMember: (name) => `"${name}" é membro Adulto.<br>Mude para a aba ADULTO para buscar`,
+    isKidsMember: (name) => `"${name}" é membro Kids.<br>Mude para a aba KIDS para buscar`,
+    lastUpdated: 'Última atualização',
+    errorGeneric: 'Ocorreu um erro',
+    errorNetwork: 'Erro de conexão',
+    nfcHint: 'Use o cartão NFC para fazer check-in',
+  },
+};
+function t(key, ...args) {
+  const entry = LANG[currentLang][key];
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
+function toggleLang() {
+  currentLang = currentLang === 'ja' ? 'pt' : 'ja';
+  const btn = document.getElementById('langToggle');
+  if (btn) btn.textContent = currentLang === 'ja' ? '🇧🇷 PT' : '🇯🇵 JP';
+  applyMobileTranslations();
+  renderMobile();
+}
+function applyMobileTranslations() {
+  const wb = document.querySelector('#checkinPersonal .mcp-greeting'); if (wb) wb.textContent = t('welcomeBack');
+  const cb = document.getElementById('checkinBtn'); if (cb && !cb.disabled) cb.textContent = t('checkinBtn');
+  const gcb = document.getElementById('genericCheckinBtn'); if (gcb) gcb.textContent = t('checkinBtn');
+  const cdt = document.querySelector('#checkinDone .mcd-title'); if (cdt) cdt.textContent = t('checkinDoneTitle');
+  const tl = document.querySelector('.m-search-label'); if (tl) tl.textContent = t('trackerLabel');
+  const si = document.getElementById('searchInput'); if (si) si.placeholder = t('searchPlaceholder');
+  const sb = document.querySelector('.m-search-btn'); if (sb) sb.textContent = t('searchBtn');
+  const ta = document.getElementById('tabAdult'); if (ta) ta.textContent = t('tabAdult');
+  const tka = document.getElementById('tabKidsA'); if (tka) tka.textContent = t('tabKidsA');
+  const tkb = document.getElementById('tabKidsB'); if (tkb) tkb.textContent = t('tabKidsB');
+  const trA = document.getElementById('trackerTabAdult'); if (trA) trA.textContent = t('trackerAdult');
+  const trK = document.getElementById('trackerTabKids'); if (trK) trK.textContent = t('trackerKids');
+  document.querySelectorAll('.mcp-info').forEach(el => {
+    const monthlyVal = document.getElementById('checkinMonthly') ? document.getElementById('checkinMonthly').textContent : '0';
+    const totalVal = document.getElementById('checkinTotal') ? document.getElementById('checkinTotal').textContent : '0';
+    el.innerHTML = t('monthlyLabel') + ' <span id="checkinMonthly">' + monthlyVal + '</span> ' + t('times') + ' ／ ' + t('totalLabel') + ' <span id="checkinTotal">' + totalVal + '</span> ' + t('times');
+  });
+  document.querySelectorAll('.mcd-count').forEach(el => {
+    const monthlyVal = document.getElementById('doneMonthly') ? document.getElementById('doneMonthly').textContent : '0';
+    const totalVal = document.getElementById('doneTotal') ? document.getElementById('doneTotal').textContent : '0';
+    el.innerHTML = t('monthlyLabel') + ' <span id="doneMonthly">' + monthlyVal + '</span> ' + t('times') + ' ／ ' + t('totalLabel') + ' <span id="doneTotal">' + totalVal + '</span> ' + t('times');
+  });
+}
 const FETCH_INTERVAL_MS = 30 * 1000;  // 30秒ごとに更新（チェックイン反映のため）
 const SLIDE_INTERVAL_MS = 8 * 1000;
 const SLIDES            = ['adult', 'kids_a', 'kids_b'];
@@ -685,7 +781,7 @@ async function doCheckin() {
 
   // ボタンがある場合のみ操作（手動モード）
   const btn = document.getElementById('checkinBtn');
-  if (btn) { btn.disabled = true; btn.textContent = '送信中...'; }
+  if (btn) { btn.disabled = true; btn.textContent = t('checkinSending'); }
 
   // auto=1 の場合はすぐに「処理中」表示
   if (AUTO_CHECKIN) {
@@ -719,18 +815,18 @@ async function doCheckin() {
       }, 4000);
     } else {
       checkinDone = false;
-      if (btn) { btn.disabled = false; btn.textContent = '⚔ チェックイン'; }
-      showMobileToast('エラーが発生しました');
+      if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
+      showMobileToast(t('errorGeneric'));
     }
   } catch(e) {
     checkinDone = false;
-    if (btn) { btn.disabled = false; btn.textContent = '⚔ チェックイン'; }
-    showMobileToast('通信エラーです');
+    if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
+    showMobileToast(t('errorNetwork'));
   }
 }
 
 function showCheckinHint() {
-  showMobileToast('NFCカードでチェックインしてください');
+  showMobileToast(t('nfcHint'));
 }
 
 // ============================================================
@@ -1013,8 +1109,8 @@ function searchTracker() {
     if (!member) {
       const km=allMembers.find(m=>m.name.includes(query)&&m.category!=='adult');
       result.innerHTML=km
-        ?`<div class="tracker-kids-note">「${km.name}」はキッズ会員です。<br>KIDSタブに切り替えて検索してください</div>`
-        :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
+        ?`<div class="tracker-kids-note">${t('isKidsMember', km.name)}</div>`
+        :`<div class="tracker-not-found">${t('notFound', query)}</div>`;
       return;
     }
     const total=member.total;
@@ -1023,7 +1119,7 @@ function searchTracker() {
       const filled=isDone?step.need:isInProg?total-step.start:0;
       const pct=isDone?100:isInProg?Math.round((filled/step.need)*100):0;
       const barCls=isDone?'done':isInProg?'prog':'none';
-      const countTxt=isDone?'達成 ✓':`${filled} / ${step.need} 回`;
+      const countTxt=isDone?t('achieved'):`${filled} / ${step.need} ${t('times')}`;
       return `<div class="tracker-step">
         <div class="ts-header">
           <div class="ts-label">${beltHTML(step.from,'adult')}<span style="color:var(--muted)">→</span>${beltHTML(step.to,'adult')}</div>
@@ -1038,13 +1134,13 @@ function searchTracker() {
           <div class="m-tracker-avatar">${initial(member.name)}</div>
           <div>
             <div class="m-tracker-name">${member.name}</div>
-            <div class="m-tracker-meta">${beltHTML(member.belt,'adult')} &nbsp; 今月 <span>${member.monthly}</span> 回</div>
+            <div class="m-tracker-meta">${beltHTML(member.belt,'adult')} &nbsp; ${t('monthlyLabel')} <span>${member.monthly}</span> ${t('times')}</div>
           </div>
         </div>
         <div class="tracker-steps">${stepsHTML}</div>
         <div class="tracker-total">
-          <span class="tt-label">累計参加回数</span>
-          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">回</span></div>
+          <span class="tt-label">${t('cumulativeParticipation')}</span>
+          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">${t('times')}</span></div>
         </div>
       </div>`;
   } else {
@@ -1053,8 +1149,8 @@ function searchTracker() {
     if (!member) {
       const am=allMembers.find(m=>m.name.includes(query)&&m.category==='adult');
       result.innerHTML=am
-        ?`<div class="tracker-kids-note">「${am.name}」はアダルト会員です。<br>ADULTタブに切り替えて検索してください</div>`
-        :`<div class="tracker-not-found">「${query}」が見つかりませんでした</div>`;
+        ?`<div class="tracker-kids-note">${t('isAdultMember', am.name)}</div>`
+        :`<div class="tracker-not-found">${t('notFound', query)}</div>`;
       return;
     }
     const total=member.total;
@@ -1063,7 +1159,7 @@ function searchTracker() {
       const filled=isDone?step.need:isInProg?total-step.start:0;
       const pct=isDone?100:isInProg?Math.round((filled/step.need)*100):0;
       const barCls=isDone?'done':isInProg?'prog':'none';
-      const countTxt=isDone?'達成 ✓':`${filled} / ${step.need} 回`;
+      const countTxt=isDone?t('achieved'):`${filled} / ${step.need} ${t('times')}`;
       return `<div class="tracker-step">
         <div class="ts-header">
           <div class="ts-label">${beltHTML(step.from,'kids_a')}<span style="color:var(--muted)">→</span>${beltHTML(step.to,'kids_a')}</div>
@@ -1078,13 +1174,13 @@ function searchTracker() {
           <div class="m-tracker-avatar" style="background:linear-gradient(135deg,var(--kids-a,#5aaff0),#3888cc);">${initial(member.name)}</div>
           <div>
             <div class="m-tracker-name">${member.name}</div>
-            <div class="m-tracker-meta">${beltHTML(member.belt,member.category)} &nbsp; 今月 <span>${member.monthly}</span> 回</div>
+            <div class="m-tracker-meta">${beltHTML(member.belt,member.category)} &nbsp; ${t('monthlyLabel')} <span>${member.monthly}</span> ${t('times')}</div>
           </div>
         </div>
         <div class="tracker-steps">${stepsHTML}</div>
         <div class="tracker-total">
-          <span class="tt-label">累計参加回数</span>
-          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">回</span></div>
+          <span class="tt-label">${t('cumulativeParticipation')}</span>
+          <div><span class="tt-val">${total.toLocaleString()}</span><span class="tt-unit">${t('times')}</span></div>
         </div>
       </div>`;
   }
