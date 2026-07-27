@@ -742,6 +742,7 @@ function getTitle(member) {
   return result;
 }
 function titleBadgeHTML(member) {
+  if (currentLang === 'pt') return '';
   const t = getTitle(member);
   return `<span class="t-badge t-${t.level}"><span class="t-icon">${t.level==='high'?'⭐':t.level==='mid'?'🔥':'◆'}</span>${t.name}</span>`;
 }
@@ -1106,7 +1107,7 @@ function switchMobileTab(cat) {
           <div class="m-p-rank">${isFirst?'👑':''} ${rankLabel(rn)}</div>
           <div class="m-p-av" style="background:${avatarBg(rn,cat)}">${initial(m.name)}</div>
           <div class="m-p-name">${m.name}</div>
-          <div class="m-p-title">${getTitle(m).name}</div>
+          <div class="m-p-title">${currentLang === 'pt' ? '' : getTitle(m).name}</div>
           <div class="m-p-monthly" style="color:${isFirst?'var(--gold)':'var(--white-dim)'}">${m.monthly}</div>
           <div class="m-p-total">累計 ${m.total.toLocaleString()}回</div>
         </div>`;
