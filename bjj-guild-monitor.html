@@ -642,34 +642,78 @@ const NFC_MEMBER_ID = URL_PARAMS.get('id') || '';
 // 称号システム
 // ============================================================
 const ADULT_TITLES = {
-  white:  [{min:0,name:'荒削りの拳',level:'low'},{min:70,name:'転がる石',level:'mid'},{min:140,name:'這い上がる者',level:'high'}],
-  blue:   [{min:200,name:'双脚の狩人',level:'low'},{min:285,name:'崩しの使い手',level:'mid'},{min:370,name:'制圧の申し子',level:'high'}],
-  purple: [{min:450,name:'千手の術師',level:'low'},{min:535,name:'背後霊',level:'mid'},{min:620,name:'関節の支配者',level:'high'}],
-  brown:  [{min:700,name:'呼吸の読者',level:'low'},{min:820,name:'沈黙の絞首人',level:'mid'},{min:940,name:'畳の亡霊',level:'high'}],
+  white:  [
+    {min:0,name:'荒削りの拳',namePt:'Punho em Bruto',level:'low'},
+    {min:70,name:'転がる石',namePt:'Pedra Rolante',level:'mid'},
+    {min:140,name:'這い上がる者',namePt:'O Que Se Ergue do Chão',level:'high'},
+  ],
+  blue:   [
+    {min:200,name:'双脚の狩人',namePt:'Caçador de Pernas',level:'low'},
+    {min:285,name:'崩しの使い手',namePt:'Mestre do Desequilíbrio',level:'mid'},
+    {min:370,name:'制圧の申し子',namePt:'Nascido para Dominar',level:'high'},
+  ],
+  purple: [
+    {min:450,name:'千手の術師',namePt:'Mestre das Mil Mãos',level:'low'},
+    {min:535,name:'背後霊',namePt:'Fantasma nas Costas',level:'mid'},
+    {min:620,name:'関節の支配者',namePt:'Senhor das Articulações',level:'high'},
+  ],
+  brown:  [
+    {min:700,name:'呼吸の読者',namePt:'Leitor do Ritmo',level:'low'},
+    {min:820,name:'沈黙の絞首人',namePt:'O Estrangulador Silencioso',level:'mid'},
+    {min:940,name:'畳の亡霊',namePt:'Fantasma do Tatame',level:'high'},
+  ],
   black:  [
-    {min:1050,name:'拳に道を見る者',level:'low'},
-    {min:1150,name:'間を制す者',level:'low'},
-    {min:1250,name:'無音の一手',level:'low'},
-    {min:1400,name:'影なき技',level:'low'},
-    {min:1550,name:'流転の理を知る者',level:'mid'},
-    {min:1700,name:'千の組手を超えた者',level:'mid'},
-    {min:1900,name:'道場を支える柱',level:'mid'},
-    {min:2100,name:'技の継承者',level:'mid'},
-    {min:2350,name:'静寂を纏う者',level:'mid'},
-    {min:2600,name:'不動の境地',level:'high'},
-    {min:2900,name:'柔術の化身👑',level:'high'},
-    {min:3300,name:'時を超えた達人👑',level:'high'},
-    {min:3800,name:'ギルドの永遠👑',level:'high'},
+    {min:1050,name:'拳に道を見る者',namePt:'Quem Vê o Caminho no Punho',level:'low'},
+    {min:1150,name:'間を制す者',namePt:'Senhor do Tempo e Distância',level:'low'},
+    {min:1250,name:'無音の一手',namePt:'O Golpe Silencioso',level:'low'},
+    {min:1400,name:'影なき技',namePt:'Técnica Sem Sombra',level:'low'},
+    {min:1550,name:'流転の理を知る者',namePt:'Quem Entende o Fluxo das Coisas',level:'mid'},
+    {min:1700,name:'千の組手を超えた者',namePt:'Quem Superou Mil Combates',level:'mid'},
+    {min:1900,name:'道場を支える柱',namePt:'O Pilar da Academia',level:'mid'},
+    {min:2100,name:'技の継承者',namePt:'Herdeiro da Técnica',level:'mid'},
+    {min:2350,name:'静寂を纏う者',namePt:'Quem Veste o Silêncio',level:'mid'},
+    {min:2600,name:'不動の境地',namePt:'O Inabalável',level:'high'},
+    {min:2900,name:'柔術の化身👑',namePt:'A Encarnação do Jiu-Jitsu👑',level:'high'},
+    {min:3300,name:'時を超えた達人👑',namePt:'O Mestre Além do Tempo👑',level:'high'},
+    {min:3800,name:'ギルドの永遠👑',namePt:'O Eterno do Guild👑',level:'high'},
   ],
 };
 const KIDS_TITLES = {
-  white:          [{min:0,name:'ガードの見習い',level:'low'},{min:27,name:'タップの洗礼',level:'mid'},{min:54,name:'スイープの使い手',level:'high'}],
-  gray:           [{min:80,name:'マウントの狩人',level:'low'},{min:107,name:'エスケープの達人',level:'mid'},{min:134,name:'サブミッションの影',level:'high'}],
-  yellow:         [{min:160,name:'トライアングルの閃光',level:'low'},{min:190,name:'パスの鬼',level:'mid'},{min:220,name:'バックの支配者',level:'high'}],
-  orange:         [{min:250,name:'チョークの刺客',level:'low'},{min:284,name:'トランジションの魔術師',level:'mid'},{min:317,name:'フローの使い手',level:'high'}],
-  'orange-black': [{min:350,name:'猛者の片鱗',level:'low'},{min:384,name:'修羅への目覚め',level:'mid'},{min:417,name:'黒の胎動',level:'high'}],
-  green:          [{min:450,name:'ポジションの王',level:'low'},{min:484,name:'フィニッシャー',level:'mid'},{min:517,name:'道場の伝説👑',level:'high'}],
-  'green-black':  [{min:550,name:'緑の覇者',level:'low'},{min:600,name:'若き武人',level:'mid'},{min:650,name:'道場の至宝👑',level:'high'}],
+  white:          [
+    {min:0,name:'ガードの見習い',namePt:'Aprendiz da Guarda',level:'low'},
+    {min:27,name:'タップの洗礼',namePt:'O Batismo do Tap',level:'mid'},
+    {min:54,name:'スイープの使い手',namePt:'Mestre da Raspagem',level:'high'},
+  ],
+  gray:           [
+    {min:80,name:'マウントの狩人',namePt:'Caçador da Montada',level:'low'},
+    {min:107,name:'エスケープの達人',namePt:'Mestre da Fuga',level:'mid'},
+    {min:134,name:'サブミッションの影',namePt:'A Sombra da Finalização',level:'high'},
+  ],
+  yellow:         [
+    {min:160,name:'トライアングルの閃光',namePt:'O Relâmpago do Triângulo',level:'low'},
+    {min:190,name:'パスの鬼',namePt:'O Demônio da Passagem',level:'mid'},
+    {min:220,name:'バックの支配者',namePt:'O Senhor das Costas',level:'high'},
+  ],
+  orange:         [
+    {min:250,name:'チョークの刺客',namePt:'O Assassino do Estrangulamento',level:'low'},
+    {min:284,name:'トランジションの魔術師',namePt:'O Mago das Transições',level:'mid'},
+    {min:317,name:'フローの使い手',namePt:'Mestre do Fluxo',level:'high'},
+  ],
+  'orange-black': [
+    {min:350,name:'猛者の片鱗',namePt:'Um Vislumbre do Guerreiro',level:'low'},
+    {min:384,name:'修羅への目覚め',namePt:'O Despertar da Fera Interior',level:'mid'},
+    {min:417,name:'黒の胎動',namePt:'O Chamado do Preto',level:'high'},
+  ],
+  green:          [
+    {min:450,name:'ポジションの王',namePt:'O Rei da Posição',level:'low'},
+    {min:484,name:'フィニッシャー',namePt:'O Finalizador',level:'mid'},
+    {min:517,name:'道場の伝説👑',namePt:'A Lenda da Academia👑',level:'high'},
+  ],
+  'green-black':  [
+    {min:550,name:'緑の覇者',namePt:'O Soberano do Verde',level:'low'},
+    {min:600,name:'若き武人',namePt:'O Jovem Guerreiro',level:'mid'},
+    {min:650,name:'道場の至宝👑',namePt:'O Tesouro da Academia👑',level:'high'},
+  ],
 };
 
 // キッズ帯昇格トラッカー閾値
@@ -692,6 +736,9 @@ function getTitle(member) {
   const total  = member.total || 0;
   let result   = steps[0];
   for (const s of steps) { if (total >= s.min) result = s; }
+  if (currentLang === 'pt' && result.namePt) {
+    return Object.assign({}, result, { name: result.namePt });
+  }
   return result;
 }
 function titleBadgeHTML(member) {
@@ -1238,7 +1285,7 @@ function updateConnBadge() {
   if (!badge) {
     badge = document.createElement('div');
     badge.id = 'connBadge';
-    badge.style.cssText = 'position:fixed;top:12px;right:14px;z-index:9999;font-family:sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:20px;pointer-events:none;transition:all 0.3s;';
+    badge.style.cssText = 'position:fixed;top:12px;left:14px;z-index:9999;font-family:sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:20px;pointer-events:none;transition:all 0.3s;';
     document.body.appendChild(badge);
   }
   if (isOnline) {
