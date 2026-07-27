@@ -222,6 +222,7 @@ body::before {
 
 /* 帯バッジ */
 .b-badge { display:inline-flex; align-items:center; gap:7px; padding:6px 14px 6px 12px; border-radius:2px; border:1px solid; font-size:17px; letter-spacing:2px; font-weight:700; text-transform:uppercase; }
+.b-badge.b-pt { font-size:11px; letter-spacing:0.3px; padding:5px 8px; white-space:nowrap; gap:5px; }
 .b-dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
 .b-white  { color:#e8e4dc; border-color:rgba(232,228,220,0.3); background:rgba(232,228,220,0.07); }
 .b-white .b-dot   { background:#e8e4dc; }
@@ -759,7 +760,8 @@ function beltHTML(belt, category) {
   const labels = currentLang === 'pt' ? labelsPt : labelsJa;
   const valid  = isKids ? ['white','gray','yellow','orange','orange-black','green','green-black'] : ['white','blue','purple','brown','black'];
   const safe   = valid.includes(belt) ? belt : valid[0];
-  return `<span class="b-badge b-${safe}"><span class="b-dot"></span>${labels[safe]||safe}</span>`;
+  const ptCls  = currentLang === 'pt' ? ' b-pt' : '';
+  return `<span class="b-badge${ptCls} b-${safe}"><span class="b-dot"></span>${labels[safe]||safe}</span>`;
 }
 
 // 帯昇格トラッカー
