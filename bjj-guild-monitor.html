@@ -204,27 +204,26 @@ body::before {
 
 /* インストラクター枠（PC/TV画面 左下固定ウィジェット） */
 .instructor-widget {
-  position: fixed; left: 14px; bottom: 14px; z-index: 500;
+  position: absolute; left: 20px; bottom: 72px; z-index: 500;
   background: rgba(10,14,26,0.92);
   border: 1px solid rgba(224,180,0,0.35);
   border-radius: 8px;
-  padding: 10px 14px;
-  max-width: 260px;
-  backdrop-filter: blur(6px);
+  padding: 12px 16px;
+  max-width: 320px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 .instructor-widget-label {
-  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px;
-  color: #e0b400; text-transform: uppercase; margin-bottom: 6px;
+  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px;
+  color: #e0b400; text-transform: uppercase; margin-bottom: 8px;
   display: flex; align-items: center; gap: 6px;
 }
 .instructor-widget-row {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; padding: 4px 0; font-size: 12px;
+  gap: 14px; padding: 5px 0; font-size: 14px;
 }
 .instructor-widget-row + .instructor-widget-row { border-top: 1px solid rgba(224,180,0,0.12); }
-.instructor-widget-name { color: var(--white); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
-.instructor-widget-count { color: #e0b400; font-family: 'Cinzel', serif; font-size: 12px; white-space: nowrap; }
+.instructor-widget-name { color: var(--white); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+.instructor-widget-count { color: #e0b400; font-family: 'Cinzel', serif; font-size: 13px; white-space: nowrap; }
 .r-row:nth-child(12) { animation-delay:0.48s; }
 .r-num  { font-family:'Cinzel',serif; font-size:30px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
@@ -1039,12 +1038,14 @@ async function fetchData(isRefresh = false) {
 function renderPC() { renderPCSlide(SLIDES[slideIndex]); }
 // インストラクター枠（左下固定ウィジェット・PC/TV画面のみ）
 function renderInstructorWidget(instructors) {
+  const pcScreen = document.getElementById('pcScreen');
+  if (!pcScreen) return;
   let widget = document.getElementById('instructorWidget');
   if (!widget) {
     widget = document.createElement('div');
     widget.id = 'instructorWidget';
     widget.className = 'instructor-widget';
-    document.body.appendChild(widget);
+    pcScreen.appendChild(widget); // ★1920x1080のPC画面内に配置（scale対象に含める）
   }
   if (!instructors || !instructors.length) {
     widget.style.display = 'none';
@@ -1071,7 +1072,7 @@ function renderPCSlide(cat) {
   sb.className='slide-bar '+(cat==='adult'?'adult':cat==='kids_a'?'kids-a':'kids-b');
   sb.style.width='0%';
   const members = allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
-  const instructors = allMembers.filter(m=>m.category===cat && m.isInstructor).sort((a,b)=>b.total-a.total);
+  const instructors = allMembers.filter(m=>m.isInstructor).sort((a,b)=>b.total-a.total);
   const top3=members.slice(0,3); const rest=members.slice(3,11);
   const rClass={adult:['a-r1','a-r2','a-r3'],kids_a:['ka-r1','ka-r2','ka-r3'],kids_b:['kb-r1','kb-r2','kb-r3']}[cat];
   const catLabelClass={adult:'cat-adult',kids_a:'cat-kids-a',kids_b:'cat-kids-b'}[cat];
