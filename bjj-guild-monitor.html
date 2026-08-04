@@ -11,7 +11,10 @@
   ?id= に会員IDを付けることで個人チェックインが可能
 
   【スプレッドシート列】
-  id | name | monthly | total | belt | category | last_reset
+  id | name | monthly | total | belt | category | last_reset | last_checkin | is_instructor
+  ※ is_instructor 列に「yes」を入れると、その会員は
+  　月間ランキングから除外され、下部の「INSTRUCTORS」枠に表示されます
+  　（累計・帯昇格トラッカーは通常通りカウントされます）
   =====================================================================
 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -199,13 +202,29 @@ body::before {
 .r-row:nth-child(10) { animation-delay:0.40s; }
 .r-row:nth-child(11) { animation-delay:0.44s; }
 
-/* インストラクター枠 */
-.instructor-section { margin-top:22px; padding-top:18px; border-top:1px solid var(--border-hi); }
-.instructor-label { font-family:'Cinzel',serif; font-size:12px; letter-spacing:4px; color:#e0b400; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
-.instructor-label::before { content:'⚑'; font-size:13px; }
-.instr-row { display:grid; grid-template-columns:72px 1fr 320px 120px 150px; align-items:center; gap:0; height:76px; padding:0 18px; border-bottom:1px solid rgba(224,180,0,0.15); background:rgba(224,180,0,0.03); }
-.instr-row:last-child { border-bottom:none; }
-.instr-icon { font-size:20px; text-align:center; opacity:0.85; }
+/* インストラクター枠（PC/TV画面 左下固定ウィジェット） */
+.instructor-widget {
+  position: fixed; left: 14px; bottom: 14px; z-index: 500;
+  background: rgba(10,14,26,0.92);
+  border: 1px solid rgba(224,180,0,0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 260px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.instructor-widget-label {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 3px;
+  color: #e0b400; text-transform: uppercase; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.instructor-widget-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 4px 0; font-size: 12px;
+}
+.instructor-widget-row + .instructor-widget-row { border-top: 1px solid rgba(224,180,0,0.12); }
+.instructor-widget-name { color: var(--white); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.instructor-widget-count { color: #e0b400; font-family: 'Cinzel', serif; font-size: 12px; white-space: nowrap; }
 .r-row:nth-child(12) { animation-delay:0.48s; }
 .r-num  { font-family:'Cinzel',serif; font-size:30px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
@@ -1018,6 +1037,30 @@ async function fetchData(isRefresh = false) {
 // PC レンダリング
 // ============================================================
 function renderPC() { renderPCSlide(SLIDES[slideIndex]); }
+// インストラクター枠（左下固定ウィジェット・PC/TV画面のみ）
+function renderInstructorWidget(instructors) {
+  let widget = document.getElementById('instructorWidget');
+  if (!widget) {
+    widget = document.createElement('div');
+    widget.id = 'instructorWidget';
+    widget.className = 'instructor-widget';
+    document.body.appendChild(widget);
+  }
+  if (!instructors || !instructors.length) {
+    widget.style.display = 'none';
+    return;
+  }
+  widget.style.display = 'block';
+  widget.innerHTML = `
+    <div class="instructor-widget-label">⚑ Instructors</div>
+    ${instructors.map(m => `
+      <div class="instructor-widget-row">
+        <span class="instructor-widget-name">${m.name}</span>
+        <span class="instructor-widget-count">累計${m.total.toLocaleString()}回</span>
+      </div>`).join('')}
+  `;
+}
+
 function renderPCSlide(cat) {
   const hdr = document.getElementById('pcHeader');
   hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':'');
@@ -1069,21 +1112,10 @@ function renderPCSlide(cat) {
           <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
         </div>`).join('')}
       </div>
-      ${instructors.length ? `
-      <div class="instructor-section">
-        <div class="instructor-label">Instructors</div>
-        ${instructors.map(m=>`
-        <div class="instr-row">
-          <div class="instr-icon">⚑</div>
-          <div class="r-name">${m.name}</div>
-          <div class="r-title-cell">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
-          <div class="r-monthly-cell"><span class="r-monthly">${m.monthly}</span><span class="r-m-unit">sessions</span></div>
-          <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
-        </div>`).join('')}
-      </div>` : ''}
     </div>`;
   const main=document.getElementById('pcMain');
   main.innerHTML=podiumHTML+listHTML;
+  renderInstructorWidget(instructors);
   startSlideProgress();
 }
 
