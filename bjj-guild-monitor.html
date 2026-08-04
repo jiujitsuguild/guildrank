@@ -202,28 +202,48 @@ body::before {
 .r-row:nth-child(10) { animation-delay:0.40s; }
 .r-row:nth-child(11) { animation-delay:0.44s; }
 
-/* インストラクター枠（PC/TV画面 左下固定ウィジェット） */
+/* インストラクター枠（PC/TV画面 左下固定ウィジェット・拡張版） */
 .instructor-widget {
   position: absolute; left: 20px; bottom: 72px; z-index: 500;
-  background: rgba(10,14,26,0.92);
-  border: 1px solid rgba(224,180,0,0.35);
-  border-radius: 8px;
-  padding: 12px 16px;
-  max-width: 320px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  background: rgba(10,14,26,0.94);
+  border: 1px solid rgba(224,180,0,0.4);
+  border-radius: 10px;
+  padding: 16px 18px;
+  width: 340px;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.5);
 }
 .instructor-widget-label {
-  font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 3px;
-  color: #e0b400; text-transform: uppercase; margin-bottom: 8px;
-  display: flex; align-items: center; gap: 6px;
+  font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 4px;
+  color: #e0b400; text-transform: uppercase; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid rgba(224,180,0,0.2); padding-bottom: 10px;
 }
-.instructor-widget-row {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; padding: 5px 0; font-size: 14px;
+.instr-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
 }
-.instructor-widget-row + .instructor-widget-row { border-top: 1px solid rgba(224,180,0,0.12); }
-.instructor-widget-name { color: var(--white); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-.instructor-widget-count { color: #e0b400; font-family: 'Cinzel', serif; font-size: 13px; white-space: nowrap; }
+.instr-card + .instr-card { border-top: 1px solid rgba(224,180,0,0.12); }
+.instr-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, #e0b400, #a87d00);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cinzel', serif; font-weight: 700; font-size: 17px; color: #0a0e1a;
+  flex-shrink: 0;
+}
+.instr-info { min-width: 0; flex: 1; }
+.instr-name { font-size: 15px; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 5px; }
+.instr-badges { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.instr-stats { text-align: right; flex-shrink: 0; }
+.instr-total { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: #e0b400; line-height: 1; }
+.instr-total-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 3px; }
+
+/* バージョン表示（フッター内） */
+.version-tag {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
+  color: var(--gold-dim); background: rgba(224,180,0,0.08);
+  border: 1px solid rgba(224,180,0,0.25); border-radius: 10px;
+  padding: 2px 9px; margin-left: 10px;
+}
 .r-row:nth-child(12) { animation-delay:0.48s; }
 .r-num  { font-family:'Cinzel',serif; font-size:30px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
@@ -457,6 +477,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
+      <span class="version-tag">v2.1</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
@@ -1036,7 +1057,7 @@ async function fetchData(isRefresh = false) {
 // PC レンダリング
 // ============================================================
 function renderPC() { renderPCSlide(SLIDES[slideIndex]); }
-// インストラクター枠（左下固定ウィジェット・PC/TV画面のみ）
+// インストラクター枠（左下固定ウィジェット・PC/TV画面のみ・拡張版）
 function renderInstructorWidget(instructors) {
   const pcScreen = document.getElementById('pcScreen');
   if (!pcScreen) return;
@@ -1055,9 +1076,16 @@ function renderInstructorWidget(instructors) {
   widget.innerHTML = `
     <div class="instructor-widget-label">⚑ Instructors</div>
     ${instructors.map(m => `
-      <div class="instructor-widget-row">
-        <span class="instructor-widget-name">${m.name}</span>
-        <span class="instructor-widget-count">累計${m.total.toLocaleString()}回</span>
+      <div class="instr-card">
+        <div class="instr-avatar">${initial(m.name)}</div>
+        <div class="instr-info">
+          <div class="instr-name">${m.name}</div>
+          <div class="instr-badges">${titleBadgeHTML(m)}${beltHTML(m.belt, m.category)}</div>
+        </div>
+        <div class="instr-stats">
+          <div class="instr-total">${m.total.toLocaleString()}</div>
+          <div class="instr-total-label">累計 / TOTAL</div>
+        </div>
       </div>`).join('')}
   `;
 }
