@@ -198,6 +198,14 @@ body::before {
 .r-row:nth-child(9)  { animation-delay:0.36s; }
 .r-row:nth-child(10) { animation-delay:0.40s; }
 .r-row:nth-child(11) { animation-delay:0.44s; }
+
+/* インストラクター枠 */
+.instructor-section { margin-top:22px; padding-top:18px; border-top:1px solid var(--border-hi); }
+.instructor-label { font-family:'Cinzel',serif; font-size:12px; letter-spacing:4px; color:#e0b400; text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.instructor-label::before { content:'⚑'; font-size:13px; }
+.instr-row { display:grid; grid-template-columns:72px 1fr 320px 120px 150px; align-items:center; gap:0; height:76px; padding:0 18px; border-bottom:1px solid rgba(224,180,0,0.15); background:rgba(224,180,0,0.03); }
+.instr-row:last-child { border-bottom:none; }
+.instr-icon { font-size:20px; text-align:center; opacity:0.85; }
 .r-row:nth-child(12) { animation-delay:0.48s; }
 .r-num  { font-family:'Cinzel',serif; font-size:30px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
@@ -376,6 +384,9 @@ html.force-pc body { overflow:hidden !important; }
 .m-r-badges { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
 .m-r-right { text-align:right; flex-shrink:0; }
 .m-r-monthly { font-family:'Cinzel',serif; font-size:20px; font-weight:700; color:var(--white); line-height:1; }
+.m-instructor-section { margin-top:10px; padding-top:10px; border-top:1px solid var(--border-hi); }
+.m-instructor-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:#e0b400; text-transform:uppercase; padding:6px 20px; }
+.m-instr-row { background:rgba(224,180,0,0.04); border-bottom-color:rgba(224,180,0,0.12); }
 .m-r-unit    { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
 .m-r-total   { font-size:10px; color:var(--muted); margin-top:2px; }
 .m-r-total span { color:var(--white-dim); font-weight:700; }
@@ -1016,7 +1027,8 @@ function renderPCSlide(cat) {
   const sb = document.getElementById('slideBar');
   sb.className='slide-bar '+(cat==='adult'?'adult':cat==='kids_a'?'kids-a':'kids-b');
   sb.style.width='0%';
-  const members = allMembers.filter(m=>m.category===cat).sort((a,b)=>b.monthly-a.monthly);
+  const members = allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
+  const instructors = allMembers.filter(m=>m.category===cat && m.isInstructor).sort((a,b)=>b.total-a.total);
   const top3=members.slice(0,3); const rest=members.slice(3,11);
   const rClass={adult:['a-r1','a-r2','a-r3'],kids_a:['ka-r1','ka-r2','ka-r3'],kids_b:['kb-r1','kb-r2','kb-r3']}[cat];
   const catLabelClass={adult:'cat-adult',kids_a:'cat-kids-a',kids_b:'cat-kids-b'}[cat];
@@ -1057,6 +1069,18 @@ function renderPCSlide(cat) {
           <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
         </div>`).join('')}
       </div>
+      ${instructors.length ? `
+      <div class="instructor-section">
+        <div class="instructor-label">Instructors</div>
+        ${instructors.map(m=>`
+        <div class="instr-row">
+          <div class="instr-icon">⚑</div>
+          <div class="r-name">${m.name}</div>
+          <div class="r-title-cell">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
+          <div class="r-monthly-cell"><span class="r-monthly">${m.monthly}</span><span class="r-m-unit">sessions</span></div>
+          <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
+        </div>`).join('')}
+      </div>` : ''}
     </div>`;
   const main=document.getElementById('pcMain');
   main.innerHTML=podiumHTML+listHTML;
@@ -1093,7 +1117,8 @@ function switchMobileTab(cat) {
   document.getElementById('tabAdult').className='m-tab '+(cat==='adult' ?'active-adult':'');
   document.getElementById('tabKidsA').className='m-tab '+(cat==='kids_a'?'active-kids-a':'');
   document.getElementById('tabKidsB').className='m-tab '+(cat==='kids_b'?'active-kids-b':'');
-  const members=allMembers.filter(m=>m.category===cat).sort((a,b)=>b.monthly-a.monthly);
+  const members=allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
+  const instructors=allMembers.filter(m=>m.category===cat && m.isInstructor).sort((a,b)=>b.total-a.total);
   const top3=members.slice(0,3); const rest=members.slice(3);
   const pClass1={adult:'p1-adult',kids_a:'p1-kids-a',kids_b:'p1-kids-b'}[cat];
   function avatarBg(rank,cat) {
@@ -1132,7 +1157,24 @@ function switchMobileTab(cat) {
         <div class="m-r-total">${t('totalLabel')} <span>${m.total.toLocaleString()}</span>${t('times')}</div>
       </div>
     </div>`).join('');
-  document.getElementById('mList').innerHTML=podHTML+listHTML;
+  const instrHTML = instructors.length ? `
+    <div class="m-instructor-section">
+      <div class="m-instructor-label">⚑ Instructors</div>
+      ${instructors.map(m=>`
+      <div class="m-r-row m-instr-row">
+        <div class="m-r-num">⚑</div>
+        <div class="m-r-info">
+          <div class="m-r-name">${m.name}</div>
+          <div class="m-r-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
+        </div>
+        <div class="m-r-right">
+          <div class="m-r-monthly">${m.monthly}</div>
+          <div class="m-r-unit">${currentLang === 'pt' ? 'vezes' : 'sessions'}</div>
+          <div class="m-r-total">${t('totalLabel')} <span>${m.total.toLocaleString()}</span>${t('times')}</div>
+        </div>
+      </div>`).join('')}
+    </div>` : '';
+  document.getElementById('mList').innerHTML=podHTML+listHTML+instrHTML;
 }
 
 // 帯昇格トラッカー
