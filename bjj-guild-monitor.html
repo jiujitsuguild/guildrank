@@ -1027,8 +1027,19 @@ async function fetchData(isRefresh = false) {
   if (!isRefresh) showOverlay('loadingOv');
 
   let newMembers = null;
+  let fetchFailed = false;
   try {
-    const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`);
+    // ★通信が固まって無制限に待ち続けないよう、6秒でタイムアウトさせる
+    // （AbortController非対応の古いTVブラウザでは、この保護なしで通常のfetchを行う）
+    let fetchOptions = {};
+    let timeoutId = null;
+    if (typeof AbortController !== 'undefined') {
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 6000);
+      fetchOptions = { signal: controller.signal };
+    }
+    const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`, fetchOptions);
+    if (timeoutId) clearTimeout(timeoutId);
     const data = await res.json();
     if (data.error || !Array.isArray(data.members)) throw new Error(data.error||'invalid');
     newMembers = data.members;
@@ -1038,6 +1049,7 @@ async function fetchData(isRefresh = false) {
     console.error(e);
     // サンプルデータは使わない：前回の正常データを表示し続ける
     isOnline = false;
+    fetchFailed = true;
   }
   updateConnBadge();
 
@@ -1079,7 +1091,9 @@ async function fetchData(isRefresh = false) {
     if (newMembers) setLastUpdate();
   }
 
-  setTimeout(() => fetchData(true), FETCH_INTERVAL_MS);
+  // ★通信に失敗した時は10秒待たず、3秒後にすぐ再試行して早期復帰を狙う
+  const nextInterval = fetchFailed ? 3 * 1000 : FETCH_INTERVAL_MS;
+  setTimeout(() => fetchData(true), nextInterval);
 }
 
 // ============================================================
