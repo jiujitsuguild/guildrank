@@ -686,9 +686,10 @@ function applyMobileTranslations() {
     el.innerHTML = t('monthlyLabel') + ' <span id="doneMonthly">' + monthlyVal + '</span> ' + t('times') + ' ／ ' + t('totalLabel') + ' <span id="doneTotal">' + totalVal + '</span> ' + t('times');
   });
 }
-const FETCH_INTERVAL_MS = 30 * 1000;  // 30秒ごとに更新（チェックイン反映のため）
+const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描画は変化があった時だけ）
 const SLIDE_INTERVAL_MS = 8 * 1000;
 const SLIDES            = ['adult', 'kids_a', 'kids_b'];
+let lastDataSnapshot = null; // ★前回取得したデータのスナップショット（変化検知用）
 
 // ============================================================
 // URLパラメータから会員IDを取得
@@ -1024,16 +1025,13 @@ function fireConfetti() {
 async function fetchData(isRefresh = false) {
   fetchElapsed = 0;
   if (!isRefresh) showOverlay('loadingOv');
-  else {
-    document.getElementById('pcScreen').classList.add('fading');
-    await sleep(550); showOverlay('refreshOv');
-  }
 
+  let newMembers = null;
   try {
     const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`);
     const data = await res.json();
     if (data.error || !Array.isArray(data.members)) throw new Error(data.error||'invalid');
-    allMembers = data.members;
+    newMembers = data.members;
     isOnline = true;
     lastGoodFetch = Date.now();
   } catch(e) {
@@ -1043,20 +1041,43 @@ async function fetchData(isRefresh = false) {
   }
   updateConnBadge();
 
-  // NFCで特定された会員を探す
-  if (NFC_MEMBER_ID) {
-    nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+  // ★データに実際の変化があったかを比較（順位・回数・帯などが1つでも変わっていればtrue）
+  const newSnapshot = newMembers ? JSON.stringify(newMembers) : null;
+  const hasChanged  = newMembers && newSnapshot !== lastDataSnapshot;
+
+  if (!isRefresh) {
+    // 初回読み込みは必ず描画
+    if (newMembers) allMembers = newMembers;
+    lastDataSnapshot = newSnapshot;
+    if (NFC_MEMBER_ID) {
+      nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+    }
+    checkTitleChanges(allMembers);
+    hideAllOverlays();
+    setLastUpdate();
+    renderPC();
+    renderMobile();
+    initCheckin();
+  } else if (hasChanged) {
+    // ★変化があった時だけ、フェード演出つきで再描画
+    document.getElementById('pcScreen').classList.add('fading');
+    await sleep(550); showOverlay('refreshOv');
+
+    allMembers = newMembers;
+    lastDataSnapshot = newSnapshot;
+    if (NFC_MEMBER_ID) {
+      nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+    }
+    checkTitleChanges(allMembers);
+    hideAllOverlays();
+    document.getElementById('pcScreen').classList.remove('fading');
+    setLastUpdate();
+    renderPC();
+    renderMobile();
+  } else {
+    // ★変化なし：画面は一切さわらず、最終更新時刻だけ静かに更新
+    if (newMembers) setLastUpdate();
   }
-
-  checkTitleChanges(allMembers);
-  hideAllOverlays();
-  document.getElementById('pcScreen').classList.remove('fading');
-  setLastUpdate();
-  renderPC();
-  renderMobile();
-
-  // 初回のみチェックイン画面を初期化
-  if (!isRefresh) initCheckin();
 
   setTimeout(() => fetchData(true), FETCH_INTERVAL_MS);
 }
