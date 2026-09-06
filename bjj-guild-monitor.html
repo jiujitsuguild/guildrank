@@ -256,6 +256,14 @@ body::before {
 .r-num  { font-family:'Cinzel',serif; font-size:22px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
 .r-name { font-size:21px; font-weight:700; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px; }
+
+/* 本日チェックイン済みインジケーター */
+.checkin-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  background: #4ade80; margin-left: 7px; box-shadow: 0 0 6px rgba(74,222,128,0.8);
+  vertical-align: middle; flex-shrink: 0;
+}
+.checkin-dot.m-dot { width: 7px; height: 7px; margin-left: 5px; }
 .r-title-cell { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .r-monthly-cell { text-align:right; }
 .r-monthly { font-family:'Cinzel',serif; font-size:24px; font-weight:700; color:var(--white); line-height:1; display:block; }
@@ -847,6 +855,12 @@ let checkinDone  = false;
 const CAT_LABEL = {adult:'Adult', kids_a:'Kids A', kids_b:'Kids B'};
 function rankLabel(r) { return r===1?'1ST':r===2?'2ND':r===3?'3RD':`${r}`; }
 function initial(name) { return (name||'?')[0]; }
+
+// ★本日チェックイン済みなら緑ドットのHTMLを返す（未チェックインなら空文字）
+function checkinDotHTML(m, small) {
+  if (!m.checkedInToday) return '';
+  return `<span class="checkin-dot${small ? ' m-dot' : ''}" title="本日チェックイン済み"></span>`;
+}
 function getCurrentMonthLabel() {
   const now=new Date();
   return `${now.getFullYear()} / ${String(now.getMonth()+1).padStart(2,'0')} Monthly`;
@@ -1122,7 +1136,7 @@ function renderInstructorWidget(instructors) {
       <div class="instr-card">
         <div class="instr-avatar">${initial(m.name)}</div>
         <div class="instr-info">
-          <div class="instr-name">${m.name}</div>
+          <div class="instr-name">${m.name}${checkinDotHTML(m)}</div>
           <div class="instr-badges">${titleBadgeHTML(m)}${beltHTML(m.belt, m.category)}</div>
         </div>
         <div class="instr-stats">
@@ -1158,7 +1172,7 @@ function renderPCSlide(cat) {
         <div class="p-avatar">${initial(m.name)}</div>
         <div class="p-info">
           <div class="p-rank-label">${i===0?'<span class="crown">👑</span>':''}${rankLabel(i+1)} Place</div>
-          <div class="p-name">${m.name}</div>
+          <div class="p-name">${m.name}${checkinDotHTML(m)}</div>
           <div class="p-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
         </div>
         <div class="p-count-wrap">
@@ -1178,7 +1192,7 @@ function renderPCSlide(cat) {
       <div>${rest.map((m,i)=>`
         <div class="r-row ${i<3?'top6':''}" style="animation-delay:${i*0.04}s">
           <div class="r-num">${i+4}</div>
-          <div class="r-name">${m.name}</div>
+          <div class="r-name">${m.name}${checkinDotHTML(m)}</div>
           <div class="r-title-cell">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
           <div class="r-monthly-cell"><span class="r-monthly">${m.monthly}</span><span class="r-m-unit">sessions</span></div>
           <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
@@ -1241,7 +1255,7 @@ function switchMobileTab(cat) {
         return `<div class="m-p-card ${isFirst?pClass1:''}">
           <div class="m-p-rank">${isFirst?'👑':''} ${rankLabel(rn)}</div>
           <div class="m-p-av" style="background:${avatarBg(rn,cat)}">${initial(m.name)}</div>
-          <div class="m-p-name">${m.name}</div>
+          <div class="m-p-name">${m.name}${checkinDotHTML(m, true)}</div>
           <div class="m-p-title">${currentLang === 'pt' ? '' : getTitle(m).name}</div>
           <div class="m-p-monthly" style="color:${isFirst?'var(--gold)':'var(--white-dim)'}">${m.monthly}</div>
           <div class="m-p-total">${t('totalLabel')} ${m.total.toLocaleString()}${t('times')}</div>
@@ -1252,7 +1266,7 @@ function switchMobileTab(cat) {
     <div class="m-r-row">
       <div class="m-r-num">${i+4}</div>
       <div class="m-r-info">
-        <div class="m-r-name">${m.name}</div>
+        <div class="m-r-name">${m.name}${checkinDotHTML(m, true)}</div>
         <div class="m-r-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
       </div>
       <div class="m-r-right">
@@ -1268,7 +1282,7 @@ function switchMobileTab(cat) {
       <div class="m-r-row m-instr-row">
         <div class="m-r-num">⚑</div>
         <div class="m-r-info">
-          <div class="m-r-name">${m.name}</div>
+          <div class="m-r-name">${m.name}${checkinDotHTML(m, true)}</div>
           <div class="m-r-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
         </div>
         <div class="m-r-right">
