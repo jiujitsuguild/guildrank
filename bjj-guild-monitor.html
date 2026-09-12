@@ -1599,13 +1599,11 @@ fetchData();
 })();
 
 // ハロウィン限定BGM（ループ再生）
-// ソース：Google Drive共有ファイル（「柔術ギルドxハロウィン (1).mp3」）
-// ※Google Driveの直接リンクは将来仕様変更で使えなくなる可能性があります。
-//   その場合はGitHubリポジトリに直接mp3を置く形に切り替えてください。
+// ソース：GitHubリポジトリ内の halloween-bgm.mp3（このHTMLファイルと同じ場所に配置してください）
 (function () {
   const bgm = document.createElement('audio');
   bgm.id = 'hwBgm';
-  bgm.src = 'https://drive.google.com/uc?export=download&id=1QWBNi9XqSbaYa8l02mP1KGxS9_ATCw9H';
+  bgm.src = 'halloween-bgm.mp3';
   bgm.loop = true;
   bgm.volume = 0.35; // 常時流しっぱなしのBGMなので控えめな音量に
   bgm.preload = 'auto';
