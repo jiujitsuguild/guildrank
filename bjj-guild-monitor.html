@@ -448,6 +448,83 @@ html.force-pc body { overflow:hidden !important; }
 .m-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .m-footer { padding:12px 20px; border-top:1px solid var(--border); text-align:center; }
 .m-last-upd { font-size:10px; letter-spacing:2px; color:var(--muted); font-family:'Cinzel',serif; text-transform:uppercase; }
+
+/* =====================================================================
+   🎃 HALLOWEEN THEME（期間限定装飾）2026
+   手動で戻す場合は、このブロックを丸ごと削除してください
+   （この下から「🎃 HALLOWEEN THEME ここまで」のコメントの直前まで）
+   ===================================================================== */
+:root {
+  --bg:         #0a0612;
+  --surface:    #150c22;
+  --card:       #1c1030;
+  --border:     #3d2a55;
+  --border-hi:  #5a3d7a;
+  --gold:       #ff8c1a;
+  --gold-light: #ffb347;
+  --gold-dim:   #cc5c00;
+  --white:      #f5ecff;
+  --white-dim:  #cdb8e6;
+  --muted:      #8a76a8;
+  --kids-a:     #5fd068;
+  --kids-a-dim: #1e5c26;
+  --kids-b:     #c86bf0;
+  --kids-b-dim: #5a1f78;
+  --g1:  rgba(255,140,26,0.5);
+  --g2:  rgba(200,107,240,0.4);
+  --g3:  rgba(95,208,104,0.35);
+  --ka1: rgba(95,208,104,0.5);
+  --kb1: rgba(200,107,240,0.5);
+}
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 640px 420px at 12% 8%,  rgba(255,140,26,0.10), transparent 60%),
+    radial-gradient(ellipse 640px 420px at 88% 92%, rgba(200,107,240,0.12), transparent 60%),
+    repeating-linear-gradient(0deg,  transparent, transparent 3px, rgba(255,255,255,0.013) 3px, rgba(255,255,255,0.013) 6px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.009) 3px, rgba(255,255,255,0.009) 6px);
+}
+body::before {
+  background: radial-gradient(ellipse 900px 600px at 50% -80px, rgba(255,140,26,0.12) 0%, transparent 70%);
+}
+/* ヘッダー見出しに🎃を追加（グラデーション文字は透明クリップされるため、絵文字部分だけ色指定を上書き） */
+.hdr-title::before, .hdr-title::after,
+.m-title::before,   .m-title::after {
+  -webkit-text-fill-color: initial;
+  background: none;
+  color: var(--gold);
+}
+.hdr-title::before { content: '🎃 '; }
+.hdr-title::after  { content: ' 🎃'; }
+.m-title::before   { content: '🎃 '; }
+.m-title::after    { content: ' 🎃'; }
+.hdr-eyebrow::before { content: '🦇 '; }
+.hdr-eyebrow::after  { content: ' 🦇'; }
+/* 四隅のクモの巣 */
+.pc-screen::before, .pc-screen::after {
+  content: '🕸️'; position: absolute; font-size: 60px; opacity: 0.32;
+  z-index: 5; pointer-events: none; line-height: 1;
+}
+.pc-screen::before { top: -8px; left: -8px; }
+.pc-screen::after  { top: -8px; right: -8px; transform: scaleX(-1); }
+/* 浮遊するコウモリ（JS側で生成した要素に適用） */
+.hw-bat {
+  position: fixed; z-index: 6; pointer-events: none; opacity: 0.85;
+  animation: hwBatFly linear infinite;
+  filter: drop-shadow(0 0 6px rgba(0,0,0,0.6));
+}
+@keyframes hwBatFly {
+  0%   { transform: translateX(-60px) translateY(0) scale(1); }
+  25%  { transform: translateX(520px) translateY(-36px) scale(1); }
+  50%  { transform: translateX(1040px) translateY(18px) scale(-1,1); }
+  75%  { transform: translateX(1560px) translateY(-24px) scale(-1,1); }
+  100% { transform: translateX(2020px) translateY(0) scale(1); }
+}
+/* PODIUM 1〜3位カードを枠色ごとハロウィン仕様に */
+.p-card.a-r1::before { background: linear-gradient(180deg, var(--gold-light), var(--gold)); }
+.p-card.a-r2::before { background: linear-gradient(180deg, #e0b8f8, var(--kids-b)); }
+.p-card.a-r3::before { background: linear-gradient(180deg, #90e8a0, var(--kids-a)); }
+/* 🎃 HALLOWEEN THEME ここまで */
 </style>
 </head>
 <body>
@@ -1499,5 +1576,28 @@ requestWakeLock();
 
 fetchData();
 </script>
+
+<!-- 🎃 HALLOWEEN THEME（期間限定装飾）— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
+<script>
+(function () {
+  const bats = ['🦇', '🦇', '🦇'];
+  const configs = [
+    { top: '12%',  duration: 22, delay: 0,  size: 26 },
+    { top: '52%',  duration: 28, delay: 6,  size: 20 },
+    { top: '78%',  duration: 18, delay: 12, size: 32 },
+  ];
+  configs.forEach((cfg, i) => {
+    const bat = document.createElement('div');
+    bat.className = 'hw-bat';
+    bat.textContent = bats[i];
+    bat.style.top = cfg.top;
+    bat.style.fontSize = cfg.size + 'px';
+    bat.style.animationDuration = cfg.duration + 's';
+    bat.style.animationDelay = cfg.delay + 's';
+    document.body.appendChild(bat);
+  });
+})();
+</script>
+<!-- 🎃 HALLOWEEN THEME ここまで -->
 </body>
 </html>
