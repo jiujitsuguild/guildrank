@@ -1597,6 +1597,36 @@ fetchData();
     document.body.appendChild(bat);
   });
 })();
+
+// ハロウィン限定BGM（ループ再生）
+// ソース：Google Drive共有ファイル（「柔術ギルドxハロウィン (1).mp3」）
+// ※Google Driveの直接リンクは将来仕様変更で使えなくなる可能性があります。
+//   その場合はGitHubリポジトリに直接mp3を置く形に切り替えてください。
+(function () {
+  const bgm = document.createElement('audio');
+  bgm.id = 'hwBgm';
+  bgm.src = 'https://drive.google.com/uc?export=download&id=1QWBNi9XqSbaYa8l02mP1KGxS9_ATCw9H';
+  bgm.loop = true;
+  bgm.volume = 0.35; // 常時流しっぱなしのBGMなので控えめな音量に
+  bgm.preload = 'auto';
+  document.body.appendChild(bgm);
+
+  function tryPlay() {
+    const p = bgm.play();
+    if (p && p.catch) p.catch(() => { /* ブラウザの自動再生制限。下のクリック待ちで再試行 */ });
+  }
+  tryPlay();
+
+  // 自動再生がブロックされた場合、画面に一度触れた時点で再生を開始する
+  // （その後はブラウザがこのページでの音声再生を許可し続ける）
+  const resumeOnInteract = () => {
+    tryPlay();
+    document.removeEventListener('click', resumeOnInteract);
+    document.removeEventListener('touchstart', resumeOnInteract);
+  };
+  document.addEventListener('click', resumeOnInteract);
+  document.addEventListener('touchstart', resumeOnInteract);
+})();
 </script>
 <!-- 🎃 HALLOWEEN THEME ここまで -->
 </body>
