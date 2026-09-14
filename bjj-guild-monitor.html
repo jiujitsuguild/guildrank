@@ -1753,16 +1753,85 @@ requestWakeLock();
  
 // ============================================================
 // 毎日1回の自動リロード（午前4時・メモリリフレッシュ）
+// ※キャッシュを使わない完全リロード（下の🧹メンテナンス機能と連携）
 // ============================================================
 (function scheduleDailyReload() {
   const now = new Date();
   const next = new Date(now);
   next.setHours(4, 0, 0, 0);
   if (next <= now) next.setDate(next.getDate() + 1);
-  setTimeout(() => location.reload(), next - now);
+  setTimeout(() => (window.guildHardReload || (() => location.reload()))('daily'), next - now);
 })();
  
 fetchData();
+</script>
+  <!-- 🧹 MAINTENANCE（常設）— メモリ解放・キャッシュ更新・自動アップデート検知。季節演出とは無関係なので消さないでください -->
+  <script>
+(function () {
+  // モニター/TV表示のときだけ動かす（スマホでチェックイン中に勝手にリロードしないため）
+  const isMonitor = () => window.innerWidth > 1024 || document.documentElement.classList.contains('force-pc');
+ 
+  // ---- キャッシュを使わない完全リロード（?pc=1 などの既存パラメータは維持） ----
+  window.guildHardReload = function (reason) {
+    try {
+      const url = new URL(location.href);
+      url.searchParams.set('_r', Date.now().toString()); // キャッシュ回避用
+      console.log('[maintenance] reload:', reason || 'manual');
+      location.replace(url.toString());
+    } catch (e) {
+      location.reload();
+    }
+  };
+ 
+  // ---- ① メモリ監視：使用量が上限を超えたらリロードして解放（Chrome系のみ計測可能） ----
+  const MEMORY_LIMIT_MB = 350;
+  setInterval(() => {
+    if (!isMonitor()) return;
+    const mem = performance && performance.memory;
+    if (!mem) return;
+    const usedMB = mem.usedJSHeapSize / (1024 * 1024);
+    if (usedMB > MEMORY_LIMIT_MB) window.guildHardReload('memory ' + Math.round(usedMB) + 'MB');
+  }, 5 * 60 * 1000);
+ 
+  // ---- ② 自動アップデート検知：GitHubに新しいHTMLを上げたら、モニター側が自動で読み直す ----
+  //     10分ごとに自分自身を再取得して内容が変わっていたらリロード
+  //     （通信エラーや途中切れファイルで誤反応しないよう、2回連続で差分があった時だけ実行）
+  function hashText(t) { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return h; }
+  let baselineHash = null, diffStrikes = 0;
+  async function fetchSelf() {
+    const url = new URL(location.href);
+    url.searchParams.set('_chk', Date.now().toString());
+    const res = await fetch(url.toString(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('status ' + res.status);
+    const text = await res.text();
+    // 正常なモニターHTMLであること（途中切れ・エラーページを除外）
+    if (!text.includes('id="pcScreen"') || !text.trim().endsWith('</html>')) throw new Error('incomplete html');
+    return hashText(text);
+  }
+  async function checkUpdate() {
+    if (!isMonitor()) return;
+    try {
+      const h = await fetchSelf();
+      if (baselineHash === null) { baselineHash = h; return; }
+      if (h !== baselineHash) {
+        diffStrikes += 1;
+        if (diffStrikes >= 2) window.guildHardReload('update detected');
+      } else {
+        diffStrikes = 0;
+      }
+    } catch (e) { /* 一時的な通信エラーは無視して次回に */ }
+  }
+  setTimeout(checkUpdate, 20 * 1000);           // 起動20秒後に基準値を取得
+  setInterval(checkUpdate, 10 * 60 * 1000);     // 以降10分ごと
+ 
+  // ---- ③ DOM掃除：演出の残骸（万一消し忘れた要素）を定期的に除去 ----
+  const TRANSIENT_CLASSES = ['hw-flash', 'hw-boo', 'hw-drop', 'hw-swarm', 'hw-energy-burst'];
+  setInterval(() => {
+    TRANSIENT_CLASSES.forEach(cls => {
+      document.querySelectorAll('.' + cls).forEach(el => el.remove());
+    });
+  }, 3 * 60 * 1000);
+})();
 </script>
   <!-- 🎃 HALLOWEEN THEME（期間限定装飾）— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
   <script>
