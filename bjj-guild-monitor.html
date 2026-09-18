@@ -1,15 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
- <head>
-  <meta charset="UTF-8">
-  <!--
+<head>
+<meta charset="UTF-8">
+<!--
   =====================================================================
   柔術ギルド ランキング — 最終完全版 v4（個人NFC対応）
- 
+
   【NFCチェックイン】
   カードURL例: https://あなたのURL/bjj-guild-monitor.html?id=001
   ?id= に会員IDを付けることで個人チェックインが可能
- 
+
   【スプレッドシート列】
   id | name | monthly | total | belt | category | last_reset | last_checkin | is_instructor
   ※ is_instructor 列に「yes」を入れると、その会員は
@@ -17,11 +17,12 @@
   　（累計・帯昇格トラッカーは通常通りカウントされます）
   =====================================================================
 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BJJ Guild Ranking</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&amp;family=Noto+Sans+JP:wght@300;400;700;900&amp;display=swap" rel="stylesheet">
-  <style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BJJ Guild Ranking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;700;900&display=swap" rel="stylesheet">
+
+<style>
 :root {
   --bg:         #04060a;
   --surface:    #0e1420;
@@ -60,7 +61,7 @@ body::before {
   pointer-events: none; z-index: 0;
 }
 @keyframes breathe { from{opacity:0.6;transform:scale(1);} to{opacity:1;transform:scale(1.08);} }
- 
+
 /* PC画面 */
 .scale-wrapper {
   width: 100vw; height: 100vh;
@@ -108,7 +109,7 @@ body::before {
 .slide-bar.adult  { background:linear-gradient(90deg,var(--gold-dim),var(--gold)); }
 .slide-bar.kids-a { background:linear-gradient(90deg,var(--kids-a-dim),var(--kids-a)); }
 .slide-bar.kids-b { background:linear-gradient(90deg,var(--kids-b-dim),var(--kids-b)); }
- 
+
 /* Podium */
 .podium-col { display:flex; flex-direction:column; padding:28px 36px 24px 56px; gap:14px; }
 .col-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:6px; color:var(--gold-dim); text-transform:uppercase; display:flex; align-items:center; gap:12px; }
@@ -181,7 +182,7 @@ body::before {
 .p-total span { color:var(--white-dim); font-weight:700; }
 .crown { font-size:16px; animation:crownPulse 3s ease-in-out infinite; }
 @keyframes crownPulse { 0%,100%{filter:drop-shadow(0 0 4px rgba(212,168,76,0.5));} 50%{filter:drop-shadow(0 0 12px rgba(212,168,76,1));} }
- 
+
 /* Ranking List */
 .list-col { display:flex; flex-direction:column; padding:22px 56px 16px 36px; gap:0; overflow:hidden; }
 .list-header { display:grid; grid-template-columns:60px 1fr 300px 100px 130px; gap:0; padding:8px 18px; margin-top:6px; border-bottom:1px solid var(--border-hi); }
@@ -207,7 +208,7 @@ body::before {
 .r-row:nth-child(16) { animation-delay:0.48s; }
 .r-row:nth-child(17) { animation-delay:0.51s; }
 .r-row:nth-child(18) { animation-delay:0.54s; }
- 
+
 /* インストラクター枠（PC/TV画面 左下固定ウィジェット・コンパクト版） */
 .instructor-widget {
   position: absolute; left: 20px; bottom: 72px; z-index: 500;
@@ -244,7 +245,7 @@ body::before {
 .instr-stats { text-align: right; flex-shrink: 0; }
 .instr-total { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #e0b400; line-height: 1; }
 .instr-total-label { font-size: 6.5px; color: var(--muted); letter-spacing: 0.5px; margin-top: 2px; }
- 
+
 /* バージョン表示（フッター内） */
 .version-tag {
   font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
@@ -255,7 +256,7 @@ body::before {
 .r-num  { font-family:'Cinzel',serif; font-size:22px; font-weight:700; color:var(--muted); }
 .r-row.top6 .r-num { color:var(--white-dim); }
 .r-name { font-size:21px; font-weight:700; color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:10px; }
- 
+
 /* 本日チェックイン済みインジケーター */
 .checkin-dot {
   display: inline-block; width: 9px; height: 9px; border-radius: 50%;
@@ -270,7 +271,7 @@ body::before {
 .r-total-cell { text-align:right; padding-left:8px; }
 .r-total { font-size:13px; color:var(--muted); }
 .r-total span { color:var(--white-dim); font-weight:700; font-size:14px; }
- 
+
 /* 称号バッジ */
 .t-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px 4px 9px; border-radius:2px; border:1px solid; font-family:'Noto Sans JP',sans-serif; font-size:13px; letter-spacing:0.5px; font-weight:700; white-space:nowrap; position:relative; overflow:hidden; }
 .t-icon { font-size:13px; }
@@ -280,7 +281,7 @@ body::before {
 .t-high::after { content:''; position:absolute; top:0; left:-100%; width:55%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent); animation:shimmer 2.4s ease-in-out infinite; }
 @keyframes highPulse { 0%,100%{box-shadow:0 0 10px rgba(212,168,76,0.35);} 50%{box-shadow:0 0 28px rgba(212,168,76,0.8),0 0 50px rgba(212,168,76,0.25);} }
 @keyframes shimmer { 0%{left:-60%;} 100%{left:140%;} }
- 
+
 /* 帯バッジ */
 .b-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px 4px 9px; border-radius:2px; border:1px solid; font-size:13px; letter-spacing:1px; font-weight:700; text-transform:uppercase; }
 .b-badge.b-pt { font-size:11px; letter-spacing:0.3px; padding:5px 8px; white-space:nowrap; gap:5px; }
@@ -307,7 +308,7 @@ body::before {
 .b-green .b-dot   { background:#2a8840; }
 .b-green-black { color:#40a860; border-color:rgba(42,136,64,0.5); background:linear-gradient(135deg,rgba(42,136,64,0.15),rgba(30,30,30,0.15)); }
 .b-green-black .b-dot { background:linear-gradient(135deg,#2a8840,#222); }
- 
+
 /* 称号エフェクト */
 .title-flash { position:fixed; inset:0; z-index:200; pointer-events:none; opacity:0; }
 .title-flash.fire { animation:flashAnim 1.2s ease-out forwards; }
@@ -320,7 +321,7 @@ body::before {
 .popup-name  { font-family:'Noto Sans JP',sans-serif; font-size:28px; font-weight:900; color:var(--white); margin-bottom:12px; }
 .popup-title { font-family:'Noto Sans JP',sans-serif; font-size:36px; font-weight:900; color:var(--gold-light); text-shadow:0 0 20px rgba(212,168,76,0.8); }
 #confettiCanvas { position:fixed; inset:0; z-index:205; pointer-events:none; opacity:0; }
- 
+
 /* オーバーレイ */
 .overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.5s ease; background:rgba(4,6,10,0.94); }
 .overlay.show { opacity:1; }
@@ -328,7 +329,7 @@ body::before {
 .ov-bar-wrap { width:360px; height:2px; background:var(--border); border-radius:2px; overflow:hidden; }
 .ov-bar { height:100%; background:linear-gradient(90deg,var(--gold-dim),var(--gold-light)); border-radius:2px; animation:ovAnim 1.6s ease-in-out infinite; }
 @keyframes ovAnim { 0%{width:0%;margin-left:0} 50%{width:60%} 100%{width:0%;margin-left:100%} }
- 
+
 /* =====================================================================
    スマホUI
    ===================================================================== */
@@ -350,10 +351,10 @@ html.force-pc body { overflow:hidden !important; }
 .m-header::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold) 40%,var(--gold-light) 50%,var(--gold) 60%,transparent); }
 .m-title { font-family:'Cinzel',serif; font-size:22px; font-weight:900; letter-spacing:3px; background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,var(--gold-dim)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; text-transform:uppercase; }
 .m-sub { font-size:11px; letter-spacing:3px; color:var(--muted); margin-top:2px; font-family:'Cinzel',serif; text-transform:uppercase; }
- 
+
 /* ===== チェックインセクション（NFC対応） ===== */
 .m-checkin-section { padding:14px 20px; border-bottom:1px solid var(--border); }
- 
+
 /* NFCで自動検出された場合の個人チェックイン */
 .m-checkin-personal { background:var(--card); border:1px solid var(--gold-dim); border-radius:4px; padding:16px; margin-bottom:10px; display:none; }
 .m-checkin-personal.show { display:block; }
@@ -365,12 +366,12 @@ html.force-pc body { overflow:hidden !important; }
 .mcp-btn:active { transform:scale(0.98); }
 .mcp-btn::after { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent); animation:shimmer 2.4s ease-in-out infinite; }
 .mcp-btn:disabled { opacity:0.5; cursor:not-allowed; }
- 
+
 /* 汎用チェックインボタン（IDなしの場合） */
 .m-checkin-btn { width:100%; padding:15px; background:linear-gradient(135deg,rgba(212,168,76,0.15),rgba(212,168,76,0.05)); border:1px solid var(--gold-dim); border-radius:4px; cursor:pointer; font-family:'Cinzel',serif; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--gold); transition:all 0.2s ease; }
 .m-checkin-btn:hover { background:linear-gradient(135deg,rgba(212,168,76,0.25),rgba(212,168,76,0.1)); }
 .m-checkin-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:8px; }
- 
+
 /* チェックイン完了画面 */
 .m-checkin-done { background:var(--card); border:1px solid rgba(80,200,120,0.4); border-radius:4px; padding:16px; text-align:center; display:none; }
 .m-checkin-done.show { display:block; }
@@ -379,7 +380,7 @@ html.force-pc body { overflow:hidden !important; }
 .mcd-name  { font-size:18px; font-weight:700; color:var(--white); margin-bottom:4px; }
 .mcd-count { font-size:13px; color:var(--muted); }
 .mcd-count span { color:var(--gold); font-weight:700; }
- 
+
 .m-search-section { padding:14px 20px; border-bottom:1px solid var(--border); background:rgba(212,168,76,0.03); }
 .m-search-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:3px; color:var(--gold-dim); text-transform:uppercase; margin-bottom:8px; display:block; }
 .m-search-row { display:flex; gap:8px; }
@@ -447,7 +448,7 @@ html.force-pc body { overflow:hidden !important; }
 .m-toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .m-footer { padding:12px 20px; border-top:1px solid var(--border); text-align:center; }
 .m-last-upd { font-size:10px; letter-spacing:2px; color:var(--muted); font-family:'Cinzel',serif; text-transform:uppercase; }
- 
+
 /* =====================================================================
    🎃 HALLOWEEN THEME（期間限定装飾）2026
    手動で戻す場合は、このブロックを丸ごと削除してください
@@ -523,7 +524,7 @@ body::before {
 .p-card.a-r1::before { background: linear-gradient(180deg, var(--gold-light), var(--gold)); }
 .p-card.a-r2::before { background: linear-gradient(180deg, #e0b8f8, var(--kids-b)); }
 .p-card.a-r3::before { background: linear-gradient(180deg, #90e8a0, var(--kids-a)); }
- 
+
 /* 浮遊する幽霊（コウモリとは違う、ふわふわ上下する軌道） */
 .hw-ghost {
   position: fixed; z-index: 6; pointer-events: none; opacity: 0.65;
@@ -538,7 +539,7 @@ body::before {
   80%  { transform: translateX(1680px) translateY(20px); }
   100% { transform: translateX(2100px) translateY(0); }
 }
- 
+
 /* 天井からぶら下がって揺れるクモ */
 .hw-spider-wrap {
   position: fixed; top: -20px; z-index: 6; pointer-events: none;
@@ -553,7 +554,7 @@ body::before {
   0%, 100% { transform: rotate(-12deg); }
   50%      { transform: rotate(12deg); }
 }
- 
+
 /* たまに登場するバンパイア（コウモリより遅く、目立つ） */
 .hw-vampire {
   position: fixed; z-index: 6; pointer-events: none; opacity: 0.9;
@@ -567,7 +568,7 @@ body::before {
   98%  { transform: translateX(-80px) scaleX(-1); }
   100% { transform: translateX(-80px) scaleX(1); }
 }
- 
+
 /* タイトルがたまにオレンジ⇄パープルでゆらめく演出 */
 .hdr-title, .m-title { animation: hwTitleFlicker 6s ease-in-out infinite; }
 @keyframes hwTitleFlicker {
@@ -577,7 +578,7 @@ body::before {
   95%  { filter: hue-rotate(-20deg) brightness(1.1); }
   97%  { filter: none; }
 }
- 
+
 /* ===== 常時演出：満月・流れる雲・足元の霧 ===== */
 .hw-moon {
   position: fixed; top: 40px; right: 120px; width: 180px; height: 180px;
@@ -614,7 +615,7 @@ body::before {
   0%, 100% { opacity: 0.6; transform: translateX(0); }
   50%      { opacity: 1;   transform: translateX(40px); }
 }
- 
+
 /* ===== サプライズ演出①：雷（画面が一瞬光って揺れる） ===== */
 .hw-flash {
   position: fixed; inset: 0; z-index: 50; pointer-events: none;
@@ -639,7 +640,7 @@ body::before {
   60%  { transform: translate(-4px, 3px); }
   80%  { transform: translate(4px, -2px); }
 }
- 
+
 /* ===== サプライズ演出②：巨大な幽霊が「BOO!」と叫びながら横切る ===== */
 .hw-boo {
   position: fixed; top: 30%; left: 0; z-index: 45; pointer-events: none;
@@ -668,7 +669,7 @@ body::before {
   80%  { opacity: 1; }
   100% { transform: scale(1.1); opacity: 0; }
 }
- 
+
 /* ===== サプライズ演出③：カボチャの雨 ===== */
 .hw-drop {
   position: fixed; top: -80px; z-index: 45; pointer-events: none;
@@ -680,7 +681,7 @@ body::before {
   90%  { opacity: 1; }
   100% { transform: translateY(1250px) rotate(720deg); opacity: 0; }
 }
- 
+
 /* ===== サプライズ演出④：コウモリの大群 ===== */
 .hw-swarm {
   position: fixed; z-index: 45; pointer-events: none;
@@ -707,131 +708,124 @@ body::before {
 }
 /* 🎃 HALLOWEEN THEME ここまで */
 </style>
- </head>
- <body>
-  <div class="title-flash" id="titleFlash"></div>
-  <canvas id="confettiCanvas"></canvas>
-  <div class="title-popup" id="titlePopup">
-   <div class="popup-inner">
+</head>
+<body>
+
+<div class="title-flash" id="titleFlash"></div>
+<canvas id="confettiCanvas"></canvas>
+<div class="title-popup" id="titlePopup">
+  <div class="popup-inner">
     <div class="popup-label">称号 昇格</div>
-    <div class="popup-name" id="popupName"></div>
+    <div class="popup-name"  id="popupName"></div>
     <div class="popup-title" id="popupTitle"></div>
-   </div>
   </div>
-  <div class="overlay" id="loadingOv">
-   <div style="font-size:40px;">⚔</div>
-   <div class="ov-title">Loading Ranking</div>
-   <div class="ov-bar-wrap">
-    <div class="ov-bar"></div>
-   </div>
-  </div>
-  <div class="overlay" id="refreshOv">
-   <div class="ov-title">⟳ Updating</div>
-   <div class="ov-bar-wrap">
-    <div class="ov-bar"></div>
-   </div>
-  </div>
-  <!-- PC画面 -->
-  <div class="scale-wrapper" id="scaleWrapper">
-   <div class="pc-screen" id="pcScreen">
-    <header class="pc-header" id="pcHeader">
-     <div class="hdr-left">
+</div>
+
+<div class="overlay" id="loadingOv">
+  <div style="font-size:40px;">⚔</div>
+  <div class="ov-title">Loading Ranking</div>
+  <div class="ov-bar-wrap"><div class="ov-bar"></div></div>
+</div>
+<div class="overlay" id="refreshOv">
+  <div class="ov-title">⟳ Updating</div>
+  <div class="ov-bar-wrap"><div class="ov-bar"></div></div>
+</div>
+
+<!-- PC画面 -->
+<div class="scale-wrapper" id="scaleWrapper">
+<div class="pc-screen" id="pcScreen">
+  <header class="pc-header" id="pcHeader">
+    <div class="hdr-left">
       <span class="hdr-eyebrow">Brazilian Jiu-Jitsu</span>
       <h1 class="hdr-title">Guild Ranking</h1>
-     </div>
-     <div class="hdr-center">
+    </div>
+    <div class="hdr-center">
       <span class="season-chip">⚔ Season 2026</span>
-      <div class="month-chip">
-       <div class="month-dot"></div>
-       <span id="pcMonthLabel">— Monthly —</span>
-      </div>
-     </div>
-     <div class="hdr-right">
-      <div class="clock" id="pcClock">00:00:00</div>
+      <div class="month-chip"><div class="month-dot"></div><span id="pcMonthLabel">— Monthly —</span></div>
+    </div>
+    <div class="hdr-right">
+      <div class="clock"      id="pcClock">00:00:00</div>
       <div class="clock-date" id="pcDate">— —</div>
-     </div>
-    </header>
-    <main class="pc-main" id="pcMain"></main>
-    <footer class="pc-footer">
-     <div class="footer-left">
-      <span class="footer-logo">⚔ BJJ Guild Monitor</span> <span class="version-tag">v2.1</span>
+    </div>
+  </header>
+  <main class="pc-main" id="pcMain"></main>
+  <footer class="pc-footer">
+    <div class="footer-left">
+      <span class="footer-logo">⚔ BJJ Guild Monitor</span>
+      <span class="version-tag">v2.1</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
-     </div>
-     <div class="footer-right">
-      <div class="slide-indicator">
-       <div class="s-pip adult-on" id="pipAdult"></div>
-       <div class="s-pip off" id="pipKidsA"></div>
-       <div class="s-pip off" id="pipKidsB"></div>
-      </div>
-      <div class="slide-bar-wrap">
-       <div class="slide-bar adult" id="slideBar"></div>
-      </div>
-      <span class="next-fetch" id="pcNextFetch">Next: 5:00</span>
-      <div class="bar-wrap">
-       <div class="bar-fill" id="fetchBar"></div>
-      </div>
-     </div>
-    </footer>
-   </div>
-  </div>
-  <!-- スマホ画面 -->
-  <div class="mobile-screen" id="mobileScreen">
-   <div class="m-header" style="position:relative;">
-    <div class="m-title">Guild Ranking</div>
-    <div class="m-sub">
-     柔術ギルド — <span id="mMonthLabel">Monthly</span>
     </div>
-    <button id="langToggle" onclick="toggleLang()" style="position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--muted); font-size:11px; letter-spacing:1px; padding:5px 10px; border-radius:20px; cursor:pointer; font-family:'Cinzel',serif;">🇧🇷 PT</button>
-   </div>
-   <!-- チェックインセクション -->
-   <div class="m-checkin-section">
+    <div class="footer-right">
+      <div class="slide-indicator">
+        <div class="s-pip adult-on" id="pipAdult"></div>
+        <div class="s-pip off"      id="pipKidsA"></div>
+        <div class="s-pip off"      id="pipKidsB"></div>
+      </div>
+      <div class="slide-bar-wrap"><div class="slide-bar adult" id="slideBar"></div></div>
+      <span class="next-fetch" id="pcNextFetch">Next: 5:00</span>
+      <div class="bar-wrap"><div class="bar-fill" id="fetchBar"></div></div>
+    </div>
+  </footer>
+</div>
+</div>
+
+<!-- スマホ画面 -->
+<div class="mobile-screen" id="mobileScreen">
+  <div class="m-header" style="position:relative;">
+    <div class="m-title">Guild Ranking</div>
+    <div class="m-sub">柔術ギルド — <span id="mMonthLabel">Monthly</span></div>
+    <button id="langToggle" onclick="toggleLang()"
+      style="position:absolute; top:8px; right:8px; background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--muted); font-size:11px; letter-spacing:1px; padding:5px 10px; border-radius:20px; cursor:pointer; font-family:'Cinzel',serif;">🇧🇷 PT</button>
+  </div>
+
+  <!-- チェックインセクション -->
+  <div class="m-checkin-section">
     <!-- NFCで個人特定できた場合 -->
     <div class="m-checkin-personal" id="checkinPersonal">
-     <div class="mcp-greeting">Welcome Back</div>
-     <div class="mcp-name" id="checkinName">—</div>
-     <div class="mcp-info">
-      今月 <span id="checkinMonthly">0</span> 回 ／ 累計 <span id="checkinTotal">0</span> 回
-     </div>
-     <button class="mcp-btn" id="checkinBtn" onclick="doCheckin()">⚔ チェックイン</button>
+      <div class="mcp-greeting">Welcome Back</div>
+      <div class="mcp-name" id="checkinName">—</div>
+      <div class="mcp-info">今月 <span id="checkinMonthly">0</span> 回 ／ 累計 <span id="checkinTotal">0</span> 回</div>
+      <button class="mcp-btn" id="checkinBtn" onclick="doCheckin()">⚔ チェックイン</button>
     </div>
     <!-- チェックイン完了 -->
     <div class="m-checkin-done" id="checkinDone">
-     <div class="mcd-icon">✅</div>
-     <div class="mcd-title">チェックイン完了</div>
-     <div class="mcd-name" id="doneeName">—</div>
-     <div class="mcd-count">
-      今月 <span id="doneMonthly">0</span> 回 ／ 累計 <span id="doneTotal">0</span> 回
-     </div>
+      <div class="mcd-icon">✅</div>
+      <div class="mcd-title">チェックイン完了</div>
+      <div class="mcd-name" id="doneeName">—</div>
+      <div class="mcd-count">今月 <span id="doneMonthly">0</span> 回 ／ 累計 <span id="doneTotal">0</span> 回</div>
     </div>
     <!-- IDなし汎用 -->
     <button class="m-checkin-btn" id="genericCheckinBtn" onclick="showCheckinHint()" style="display:none;">⚔ チェックイン</button>
     <div class="m-checkin-hint" id="checkinHint"></div>
-   </div>
-   <div class="m-search-section">
+  </div>
+
+  <div class="m-search-section">
     <span class="m-search-label">▸ 帯昇格トラッカー</span>
     <div style="display:flex; gap:6px; margin-bottom:8px;">
-     <button id="trackerTabAdult" onclick="switchTrackerTab('adult')" style="flex:1; padding:7px; background:var(--red); color:#fff; border:none; border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">ADULT</button>
-     <button id="trackerTabKids" onclick="switchTrackerTab('kids')" style="flex:1; padding:7px; background:var(--card); color:var(--muted); border:1px solid var(--border); border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">KIDS</button>
+      <button id="trackerTabAdult" onclick="switchTrackerTab('adult')"
+        style="flex:1; padding:7px; background:var(--red); color:#fff; border:none; border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">ADULT</button>
+      <button id="trackerTabKids" onclick="switchTrackerTab('kids')"
+        style="flex:1; padding:7px; background:var(--card); color:var(--muted); border:1px solid var(--border); border-radius:3px; font-size:11px; letter-spacing:2px; font-family:'Cinzel',serif; cursor:pointer;">KIDS</button>
     </div>
     <div class="m-search-row">
-     <input class="m-search-input" id="searchInput" type="text" placeholder="名前を入力..." maxlength="20">
-     <button class="m-search-btn" onclick="searchTracker()">検索</button>
+      <input class="m-search-input" id="searchInput" type="text" placeholder="名前を入力..." maxlength="20">
+      <button class="m-search-btn" onclick="searchTracker()">検索</button>
     </div>
     <div id="trackerResult"></div>
-   </div>
-   <div class="m-tabs">
-    <button class="m-tab active-adult" id="tabAdult" onclick="switchMobileTab('adult')">アダルト</button>
-    <button class="m-tab" id="tabKidsA" onclick="switchMobileTab('kids_a')">キッズA</button>
-    <button class="m-tab" id="tabKidsB" onclick="switchMobileTab('kids_b')">キッズB</button>
-   </div>
-   <div class="m-list" id="mList"></div>
-   <div class="m-footer">
-    <div class="m-last-upd" id="mLastUpd">Last Updated: —</div>
-   </div>
   </div>
-  <div class="m-toast" id="mToast"></div>
-  <script>
+
+  <div class="m-tabs">
+    <button class="m-tab active-adult" id="tabAdult"  onclick="switchMobileTab('adult')">アダルト</button>
+    <button class="m-tab"              id="tabKidsA"  onclick="switchMobileTab('kids_a')">キッズA</button>
+    <button class="m-tab"              id="tabKidsB"  onclick="switchMobileTab('kids_b')">キッズB</button>
+  </div>
+  <div class="m-list" id="mList"></div>
+  <div class="m-footer"><div class="m-last-upd" id="mLastUpd">Last Updated: —</div></div>
+</div>
+<div class="m-toast" id="mToast"></div>
+
+<script>
 // ============================================================
 // ★★★ 画面解像度の自動スケーリング ★★★
 // 1920x1080デザインを基準に、どんな解像度でも
@@ -860,12 +854,12 @@ function fitScale() {
 window.addEventListener('resize', fitScale);
 window.addEventListener('orientationchange', fitScale);
 fitScale();
- 
+
 // ============================================================
 // ★★★ 設定 ★★★
 // ============================================================
 const SHEET_API_URL     = 'https://script.google.com/macros/s/AKfycbyIRtKTtXtNX04KCIqkv2mNvDesQFW5OkyJxRBaFcmQz4chR8XTBmUxVi2EPEDy5bvJYg/exec';
- 
+
 // ============================================================
 // 言語切り替え（スマホ画面のみ）
 // ============================================================
@@ -895,6 +889,8 @@ const LANG = {
     lastUpdated: 'Last Updated',
     errorGeneric: 'エラーが発生しました',
     errorNetwork: '通信エラーです',
+    alreadyCheckedIn: (name) => `${name} さんは本日チェックイン済みです ✓`,
+    serverBusy: '混雑しています。もう一度お試しください',
     nfcHint: 'NFCカードでチェックインしてください',
   },
   pt: {
@@ -921,6 +917,8 @@ const LANG = {
     lastUpdated: 'Última atualização',
     errorGeneric: 'Ocorreu um erro',
     errorNetwork: 'Erro de conexão',
+    alreadyCheckedIn: (name) => `${name}, check-in de hoje já feito ✓`,
+    serverBusy: 'Muito movimento agora. Tente novamente',
     nfcHint: 'Use o cartão NFC para fazer check-in',
   },
 };
@@ -963,14 +961,14 @@ const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描�
 const SLIDE_INTERVAL_MS = 8 * 1000;
 const SLIDES            = ['adult', 'kids_a', 'kids_b'];
 let lastDataSnapshot = null; // ★前回取得したデータのスナップショット（変化検知用）
- 
+
 // ============================================================
 // URLパラメータから会員IDを取得
 // NFCカードのURL例: ...?id=001
 // ============================================================
 const URL_PARAMS  = new URLSearchParams(window.location.search);
 const NFC_MEMBER_ID = URL_PARAMS.get('id') || '';
- 
+
 // ============================================================
 // 称号システム
 // ============================================================
@@ -1048,7 +1046,7 @@ const KIDS_TITLES = {
     {min:650,name:'道場の至宝👑',namePt:'O Tesouro da Academia👑',level:'high'},
   ],
 };
- 
+
 // キッズ帯昇格トラッカー閾値
 const KIDS_BELT_THRESHOLDS = (() => {
   const steps = [
@@ -1079,7 +1077,7 @@ function titleBadgeHTML(member) {
   const t = getTitle(member);
   return `<span class="t-badge t-${t.level}"><span class="t-icon">${t.level==='high'?'⭐':t.level==='mid'?'🔥':'◆'}</span>${t.name}</span>`;
 }
- 
+
 // 帯バッジ
 const ADULT_BELT_LABELS = {white:'白帯',blue:'青帯',purple:'紫帯',brown:'茶帯',black:'黒帯'};
 const KIDS_BELT_LABELS  = {white:'白帯',gray:'グレー',yellow:'イエロー',orange:'オレンジ','orange-black':'オレンジ黒',green:'グリーン','green-black':'グリーン黒'};
@@ -1095,14 +1093,14 @@ function beltHTML(belt, category) {
   const ptCls  = currentLang === 'pt' ? ' b-pt' : '';
   return `<span class="b-badge${ptCls} b-${safe}"><span class="b-dot"></span>${labels[safe]||safe}</span>`;
 }
- 
+
 // 帯昇格トラッカー
 const BELT_THRESHOLDS = (() => {
   const steps = [{from:'white',to:'blue',need:200},{from:'blue',to:'purple',need:250},{from:'purple',to:'brown',need:250},{from:'brown',to:'black',need:350}];
   let acc = 0;
   return steps.map(s => { const start=acc; acc+=s.need; return {...s,start,end:acc}; });
 })();
- 
+
 // ============================================================
 // 状態
 // ============================================================
@@ -1116,11 +1114,11 @@ let prevTitles   = {};
 let prevBelts    = {};
 let nfcMember    = null; // NFCで特定された会員
 let checkinDone  = false;
- 
+
 const CAT_LABEL = {adult:'Adult', kids_a:'Kids A', kids_b:'Kids B'};
 function rankLabel(r) { return r===1?'1ST':r===2?'2ND':r===3?'3RD':`${r}`; }
 function initial(name) { return (name||'?')[0]; }
- 
+
 // ★本日チェックイン済みなら緑ドットのHTMLを返す（未チェックインなら空文字）
 function checkinDotHTML(m, small) {
   if (!m.checkedInToday) return '';
@@ -1131,22 +1129,22 @@ function getCurrentMonthLabel() {
   return `${now.getFullYear()} / ${String(now.getMonth()+1).padStart(2,'0')} Monthly`;
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
- 
+
 // ============================================================
 // チェックイン機能（NFC個人対応）
 // auto=1 パラメータがあれば自動でチェックイン実行
 // ============================================================
 const AUTO_CHECKIN = URL_PARAMS.get('auto') === '1';
- 
+
 function initCheckin() {
   const personal    = document.getElementById('checkinPersonal');
   const genericBtn  = document.getElementById('genericCheckinBtn');
   const checkinHint = document.getElementById('checkinHint');
- 
+
   if (NFC_MEMBER_ID && nfcMember) {
     // カテゴリに合わせてタブを切り替え
     if (nfcMember.category) switchMobileTab(nfcMember.category);
- 
+
     if (AUTO_CHECKIN) {
       // auto=1 → データ取得完了後に自動チェックイン実行
       // 少し待ってから実行（画面描画完了を待つ）
@@ -1166,15 +1164,19 @@ function initCheckin() {
     checkinHint.textContent  = 'NFCカードをタップするか、スタッフに声をかけてください';
   }
 }
- 
+
 async function doCheckin() {
   if (!nfcMember || checkinDone) return;
   checkinDone = true;
- 
+
+  // ★あとで「本当に失敗したか」を検証するため、送信前の回数を控えておく
+  const beforeMonthly = nfcMember.monthly;
+  const beforeTotal   = nfcMember.total;
+
   // ボタンがある場合のみ操作（手動モード）
   const btn = document.getElementById('checkinBtn');
   if (btn) { btn.disabled = true; btn.textContent = t('checkinSending'); }
- 
+
   // auto=1 の場合はすぐに「処理中」表示
   if (AUTO_CHECKIN) {
     const done = document.getElementById('checkinDone');
@@ -1183,44 +1185,88 @@ async function doCheckin() {
     document.getElementById('doneTotal').textContent   = nfcMember.total.toLocaleString();
     done.classList.add('show');
   }
- 
+
+  function showSuccess(monthly, total) {
+    document.getElementById('checkinPersonal').classList.remove('show');
+    const done = document.getElementById('checkinDone');
+    done.classList.add('show');
+    document.getElementById('doneeName').textContent   = nfcMember.name;
+    document.getElementById('doneMonthly').textContent = monthly;
+    document.getElementById('doneTotal').textContent   = total.toLocaleString();
+    setTimeout(() => { window.location.href = window.location.pathname; }, 4000);
+  }
+
+  // ★Apps Script側の応答がうまく届かなかった時に使う保険：
+  //   「本当に失敗したのか」を最新データを取り直して確認する。
+  //   （Apps Scriptは処理自体は成功しているのに、応答だけ遅延・失敗することがある）
+  async function verifyActuallyFailed() {
+    try {
+      const controller = new AbortController();
+      const timeoutId  = setTimeout(() => controller.abort(), 6000);
+      const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (!Array.isArray(data.members)) return null;
+      const fresh = data.members.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim());
+      if (!fresh) return null;
+      allMembers = data.members;
+      nfcMember  = fresh;
+      const increased = fresh.monthly > beforeMonthly || fresh.total > beforeTotal;
+      return { increased, fresh };
+    } catch (e2) {
+      return null; // 確認もできない＝本当に通信が繋がっていない
+    }
+  }
+
   try {
     const res  = await fetch(SHEET_API_URL, {
       method: 'POST',
       body:   JSON.stringify({ id: NFC_MEMBER_ID }),
     });
     const data = await res.json();
- 
+
     if (data.success) {
       // 完了画面を更新（実際の数値に）
-      document.getElementById('checkinPersonal').classList.remove('show');
-      const done = document.getElementById('checkinDone');
-      done.classList.add('show');
-      document.getElementById('doneeName').textContent    = nfcMember.name;
-      document.getElementById('doneMonthly').textContent  = data.monthly;
-      document.getElementById('doneTotal').textContent    = data.total.toLocaleString();
+      showSuccess(data.monthly, data.total);
       // チェックイン直後に即座にランキングを更新
       fetchData(true);
-      // 4秒後にページをリセット（次の人のために）
-      setTimeout(() => {
-        window.location.href = window.location.pathname;
-      }, 4000);
     } else {
       checkinDone = false;
       if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
-      showMobileToast(t('errorGeneric'));
+      if (data.already) {
+        // ★本日チェックイン済みは正常な状態。エラーではなく落ち着いた案内にする
+        checkinDone = true;
+        showSuccess(data.monthly, data.total || 0);
+        showMobileToast(t('alreadyCheckedIn')(nfcMember.name));
+      } else if (data.error === 'server busy, try again') {
+        // ★ロック混雑（同時タップ集中）。壊れているわけではないので専用メッセージ
+        showMobileToast(t('serverBusy'));
+      } else {
+        showMobileToast(t('errorGeneric'));
+      }
     }
   } catch(e) {
-    checkinDone = false;
-    if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
-    showMobileToast(t('errorNetwork'));
+    // ★fetch自体が失敗 or レスポンスの解析に失敗した場合、
+    //   「本当に失敗したか」を確認してから表示する
+    //  （サーバー側は実は処理済みで、応答だけ届かなかったケースを救済する）
+    const check = await verifyActuallyFailed();
+    if (check && check.increased) {
+      checkinDone = true;
+      showSuccess(check.fresh.monthly, check.fresh.total);
+      fetchData(true); // ランキング表示も即座に更新
+      // エラーは出さない（実際には成功しているため）
+    } else {
+      checkinDone = false;
+      if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
+      showMobileToast(t('errorNetwork'));
+    }
   }
 }
- 
+
 function showCheckinHint() {
   showMobileToast(t('nfcHint'));
 }
- 
+
 // ============================================================
 // 称号エフェクト
 // ============================================================
@@ -1297,14 +1343,14 @@ function fireConfetti() {
   }
   draw();
 }
- 
+
 // ============================================================
 // データ取得
 // ============================================================
 async function fetchData(isRefresh = false) {
   fetchElapsed = 0;
   if (!isRefresh) showOverlay('loadingOv');
- 
+
   let newMembers = null;
   let fetchFailed = false;
   try {
@@ -1331,11 +1377,11 @@ async function fetchData(isRefresh = false) {
     fetchFailed = true;
   }
   updateConnBadge();
- 
+
   // ★データに実際の変化があったかを比較（順位・回数・帯などが1つでも変わっていればtrue）
   const newSnapshot = newMembers ? JSON.stringify(newMembers) : null;
   const hasChanged  = newMembers && newSnapshot !== lastDataSnapshot;
- 
+
   if (!isRefresh) {
     // 初回読み込みは必ず描画
     if (newMembers) allMembers = newMembers;
@@ -1353,7 +1399,7 @@ async function fetchData(isRefresh = false) {
     // ★変化があった時だけ、フェード演出つきで再描画
     document.getElementById('pcScreen').classList.add('fading');
     await sleep(550); showOverlay('refreshOv');
- 
+
     allMembers = newMembers;
     lastDataSnapshot = newSnapshot;
     if (NFC_MEMBER_ID) {
@@ -1369,12 +1415,12 @@ async function fetchData(isRefresh = false) {
     // ★変化なし：画面は一切さわらず、最終更新時刻だけ静かに更新
     if (newMembers) setLastUpdate();
   }
- 
+
   // ★通信に失敗した時は10秒待たず、3秒後にすぐ再試行して早期復帰を狙う
   const nextInterval = fetchFailed ? 3 * 1000 : FETCH_INTERVAL_MS;
   setTimeout(() => fetchData(true), nextInterval);
 }
- 
+
 // ============================================================
 // PC レンダリング
 // ============================================================
@@ -1411,7 +1457,7 @@ function renderInstructorWidget(instructors) {
       </div>`).join('')}
   `;
 }
- 
+
 function renderPCSlide(cat) {
   const hdr = document.getElementById('pcHeader');
   hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':'');
@@ -1469,7 +1515,7 @@ function renderPCSlide(cat) {
   renderInstructorWidget(instructors);
   startSlideProgress();
 }
- 
+
 function startSlideProgress() {
   if (slideRaf) cancelAnimationFrame(slideRaf);
   slideStart=null;
@@ -1490,7 +1536,7 @@ function toggleSlide() {
   main.style.opacity='0'; main.style.transition='opacity 0.5s ease';
   setTimeout(()=>{renderPCSlide(SLIDES[slideIndex]);main.style.opacity='1';},500);
 }
- 
+
 // ============================================================
 // スマホ レンダリング
 // ============================================================
@@ -1559,7 +1605,7 @@ function switchMobileTab(cat) {
     </div>` : '';
   document.getElementById('mList').innerHTML=podHTML+listHTML+instrHTML;
 }
- 
+
 // 帯昇格トラッカー
 let trackerMode = 'adult';
 function switchTrackerTab(mode) {
@@ -1577,12 +1623,12 @@ function switchTrackerTab(mode) {
   }
   document.getElementById('trackerResult').innerHTML='';
 }
- 
+
 function searchTracker() {
   const query=document.getElementById('searchInput').value.trim();
   const result=document.getElementById('trackerResult');
   if (!query){result.innerHTML='';return;}
- 
+
   if (trackerMode==='adult') {
     const member=allMembers.find(m=>m.name.includes(query)&&m.category==='adult');
     if (!member) {
@@ -1665,7 +1711,7 @@ function searchTracker() {
   }
 }
 document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')searchTracker();});
- 
+
 // Toast
 function showMobileToast(msg) {
   const el=document.getElementById('mToast');
@@ -1673,7 +1719,7 @@ function showMobileToast(msg) {
   el.classList.add('show');
   setTimeout(()=>el.classList.remove('show'),2600);
 }
- 
+
 // 時計
 const DAYS_JP=['日','月','火','水','木','金','土'];
 function updateClock() {
@@ -1685,7 +1731,7 @@ function updateClock() {
   const de=document.getElementById('pcDate');  if(de) de.textContent=`${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}（${DAYS_JP[now.getDay()]}）`;
 }
 setInterval(updateClock,1000); updateClock();
- 
+
 function tickFetch() {
   fetchElapsed+=1000;
   const remain=Math.max(0,FETCH_INTERVAL_MS-fetchElapsed);
@@ -1694,7 +1740,7 @@ function tickFetch() {
   const fb=document.getElementById('fetchBar');    if(fb) fb.style.width=Math.min((fetchElapsed/FETCH_INTERVAL_MS)*100,100)+'%';
 }
 setInterval(tickFetch,1000);
- 
+
 function setLastUpdate() {
   const now=new Date();
   const ts=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -1703,10 +1749,10 @@ function setLastUpdate() {
   const pm=document.getElementById('pcMonthLabel'); if(pm) pm.textContent=getCurrentMonthLabel();
   const mm=document.getElementById('mMonthLabel');  if(mm) mm.textContent=getCurrentMonthLabel();
 }
- 
+
 function showOverlay(id)   { var el=document.getElementById(id); if(el) el.classList.add('show'); }
 function hideAllOverlays() { ['loadingOv','refreshOv'].forEach(function(id){ var el=document.getElementById(id); if(el) el.classList.remove('show'); }); }
- 
+
 // ============================================================
 // 接続状態バッジ（LIVE / OFFLINE）
 // ============================================================
@@ -1733,7 +1779,7 @@ function updateConnBadge() {
     badge.style.border = '1px solid rgba(228,90,90,0.4)';
   }
 }
- 
+
 // ============================================================
 // 画面スリープ防止（Wake Lock API・対応ブラウザのみ）
 // ============================================================
@@ -1750,7 +1796,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
 requestWakeLock();
- 
+
 // ============================================================
 // 毎日1回の自動リロード（午前4時・メモリリフレッシュ）
 // ※キャッシュを使わない完全リロード（下の🧹メンテナンス機能と連携）
@@ -1762,15 +1808,16 @@ requestWakeLock();
   if (next <= now) next.setDate(next.getDate() + 1);
   setTimeout(() => (window.guildHardReload || (() => location.reload()))('daily'), next - now);
 })();
- 
+
 fetchData();
 </script>
-  <!-- 🧹 MAINTENANCE（常設）— メモリ解放・キャッシュ更新・自動アップデート検知。季節演出とは無関係なので消さないでください -->
-  <script>
+
+<!-- 🧹 MAINTENANCE（常設）— メモリ解放・キャッシュ更新・自動アップデート検知。季節演出とは無関係なので消さないでください -->
+<script>
 (function () {
   // モニター/TV表示のときだけ動かす（スマホでチェックイン中に勝手にリロードしないため）
   const isMonitor = () => window.innerWidth > 1024 || document.documentElement.classList.contains('force-pc');
- 
+
   // ---- キャッシュを使わない完全リロード（?pc=1 などの既存パラメータは維持） ----
   window.guildHardReload = function (reason) {
     try {
@@ -1782,7 +1829,7 @@ fetchData();
       location.reload();
     }
   };
- 
+
   // ---- ① メモリ監視：使用量が上限を超えたらリロードして解放（Chrome系のみ計測可能） ----
   const MEMORY_LIMIT_MB = 350;
   setInterval(() => {
@@ -1792,7 +1839,7 @@ fetchData();
     const usedMB = mem.usedJSHeapSize / (1024 * 1024);
     if (usedMB > MEMORY_LIMIT_MB) window.guildHardReload('memory ' + Math.round(usedMB) + 'MB');
   }, 5 * 60 * 1000);
- 
+
   // ---- ② 自動アップデート検知：GitHubに新しいHTMLを上げたら、モニター側が自動で読み直す ----
   //     10分ごとに自分自身を再取得して内容が変わっていたらリロード
   //     （通信エラーや途中切れファイルで誤反応しないよう、2回連続で差分があった時だけ実行）
@@ -1823,7 +1870,7 @@ fetchData();
   }
   setTimeout(checkUpdate, 20 * 1000);           // 起動20秒後に基準値を取得
   setInterval(checkUpdate, 10 * 60 * 1000);     // 以降10分ごと
- 
+
   // ---- ③ DOM掃除：演出の残骸（万一消し忘れた要素）を定期的に除去 ----
   const TRANSIENT_CLASSES = ['hw-flash', 'hw-boo', 'hw-drop', 'hw-swarm', 'hw-energy-burst'];
   setInterval(() => {
@@ -1833,8 +1880,9 @@ fetchData();
   }, 3 * 60 * 1000);
 })();
 </script>
-  <!-- 🎃 HALLOWEEN THEME（期間限定装飾）— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
-  <script>
+
+<!-- 🎃 HALLOWEEN THEME（期間限定装飾）— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
+<script>
 (function () {
   const bats = ['🦇', '🦇', '🦇'];
   const configs = [
@@ -1853,7 +1901,7 @@ fetchData();
     document.body.appendChild(bat);
   });
 })();
- 
+
 // 幽霊
 (function () {
   const configs = [
@@ -1871,7 +1919,7 @@ fetchData();
     document.body.appendChild(ghost);
   });
 })();
- 
+
 // 天井からぶら下がって揺れるクモ（複数箇所）
 (function () {
   const positions = ['8%', '35%', '68%', '90%'];
@@ -1881,22 +1929,22 @@ fetchData();
     wrap.style.left = left;
     wrap.style.animationDuration = (5 + i) + 's';
     wrap.style.animationDelay = (i * 1.3) + 's';
- 
+
     const thread = document.createElement('div');
     thread.className = 'hw-spider-thread';
     thread.style.height = (60 + i * 20) + 'px';
- 
+
     const icon = document.createElement('div');
     icon.className = 'hw-spider-icon';
     icon.style.fontSize = '22px';
     icon.textContent = '🕷️';
- 
+
     wrap.appendChild(thread);
     wrap.appendChild(icon);
     document.body.appendChild(wrap);
   });
 })();
- 
+
 // たまに画面下部を横切るバンパイア
 (function () {
   const vampire = document.createElement('div');
@@ -1908,13 +1956,13 @@ fetchData();
   vampire.style.animationDelay = '5s';
   document.body.appendChild(vampire);
 })();
- 
+
 // ===== 常時演出：満月・流れる雲・足元の霧 =====
 (function () {
   const moon = document.createElement('div');
   moon.className = 'hw-moon';
   document.body.appendChild(moon);
- 
+
   [ { top: '70px',  duration: 60, delay: 0  },
     { top: '130px', duration: 85, delay: 25 } ].forEach(cfg => {
     const cloud = document.createElement('div');
@@ -1924,20 +1972,20 @@ fetchData();
     cloud.style.animationDelay = '-' + cfg.delay + 's';
     document.body.appendChild(cloud);
   });
- 
+
   const fog1 = document.createElement('div'); fog1.className = 'hw-fog';
   const fog2 = document.createElement('div'); fog2.className = 'hw-fog f2';
   document.body.appendChild(fog1);
   document.body.appendChild(fog2);
 })();
- 
+
 // ===== サプライズ演出：数分に1回、ランダムで派手なイベントが発生 =====
 (function () {
   // ※揺れは .pc-screen ではなく body にかける
   //   （.pc-screen には画面フィット用の scale() が入っているため、
   //     transform を上書きすると一瞬スケールが外れてカクつくのを防ぐ）
   const shakeTarget = document.body;
- 
+
   // ①雷：画面が光って揺れる
   function lightning() {
     const flash = document.createElement('div');
@@ -1947,7 +1995,7 @@ fetchData();
     setTimeout(() => shakeTarget.classList.remove('hw-shake'), 700);
     setTimeout(() => flash.remove(), 1800);
   }
- 
+
   // ②巨大な幽霊が「BOO!」と叫びながら横切る
   function boo() {
     const ghost = document.createElement('div');
@@ -1960,7 +2008,7 @@ fetchData();
     document.body.appendChild(ghost);
     setTimeout(() => ghost.remove(), 4800);
   }
- 
+
   // ③カボチャの雨（お菓子も混ぜて賑やかに）
   function pumpkinRain() {
     const items = ['🎃', '🎃', '🎃', '🍬', '🍭', '🍫', '🎃'];
@@ -1978,71 +2026,6 @@ fetchData();
       setTimeout(() => d.remove(), (dur + 2.2) * 1000);
     }
   }
- 
+
   // ④コウモリの大群
-  function batSwarm() {
-    const count = 18;
-    for (let i = 0; i < count; i++) {
-      const b = document.createElement('div');
-      b.className = 'hw-swarm';
-      b.textContent = '🦇';
-      b.style.top = (5 + Math.random() * 85) + '%';
-      b.style.fontSize = (18 + Math.random() * 22) + 'px';
-      const dur = 2.5 + Math.random() * 2;
-      b.style.animationDuration = dur + 's';
-      b.style.animationDelay = (Math.random() * 1.5) + 's';
-      document.body.appendChild(b);
-      setTimeout(() => b.remove(), (dur + 1.8) * 1000);
-    }
-  }
- 
-  const events = [lightning, boo, pumpkinRain, batSwarm];
-  let lastIndex = -1;
- 
-  function scheduleNext() {
-    // 70〜130秒のランダム間隔で発生（同じ演出が連続しないようにする）
-    const wait = (70 + Math.random() * 60) * 1000;
-    setTimeout(() => {
-      let idx;
-      do { idx = Math.floor(Math.random() * events.length); } while (idx === lastIndex && events.length > 1);
-      lastIndex = idx;
-      try { events[idx](); } catch (e) { /* 演出の失敗でモニター本体を止めない */ }
-      scheduleNext();
-    }, wait);
-  }
- 
-  // 起動から20秒後に最初のイベント（雷）で「おおっ」を作り、その後ランダム
-  setTimeout(() => { lightning(); scheduleNext(); }, 20000);
-})();
- 
-// ハロウィン限定BGM（ループ再生）
-// ソース：GitHubリポジトリ内の halloween-bgm.mp3（このHTMLファイルと同じ場所に配置してください）
-(function () {
-  const bgm = document.createElement('audio');
-  bgm.id = 'hwBgm';
-  bgm.src = 'halloween-bgm.mp3';
-  bgm.loop = true;
-  bgm.volume = 0.35; // 常時流しっぱなしのBGMなので控えめな音量に
-  bgm.preload = 'auto';
-  document.body.appendChild(bgm);
- 
-  function tryPlay() {
-    const p = bgm.play();
-    if (p && p.catch) p.catch(() => { /* ブラウザの自動再生制限。下のクリック待ちで再試行 */ });
-  }
-  tryPlay();
- 
-  // 自動再生がブロックされた場合、画面に一度触れた時点で再生を開始する
-  // （その後はブラウザがこのページでの音声再生を許可し続ける）
-  const resumeOnInteract = () => {
-    tryPlay();
-    document.removeEventListener('click', resumeOnInteract);
-    document.removeEventListener('touchstart', resumeOnInteract);
-  };
-  document.addEventListener('click', resumeOnInteract);
-  document.addEventListener('touchstart', resumeOnInteract);
-})();
-</script>
-  <!-- 🎃 HALLOWEEN THEME ここまで -->
- </body>
-</html>
+  func
