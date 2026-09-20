@@ -2028,4 +2028,69 @@ fetchData();
   }
 
   // ④コウモリの大群
-  func
+  function batSwarm() {
+    const count = 18;
+    for (let i = 0; i < count; i++) {
+      const b = document.createElement('div');
+      b.className = 'hw-swarm';
+      b.textContent = '🦇';
+      b.style.top = (5 + Math.random() * 85) + '%';
+      b.style.fontSize = (18 + Math.random() * 22) + 'px';
+      const dur = 2.5 + Math.random() * 2;
+      b.style.animationDuration = dur + 's';
+      b.style.animationDelay = (Math.random() * 1.5) + 's';
+      document.body.appendChild(b);
+      setTimeout(() => b.remove(), (dur + 1.8) * 1000);
+    }
+  }
+
+  const events = [lightning, boo, pumpkinRain, batSwarm];
+  let lastIndex = -1;
+
+  function scheduleNext() {
+    // 70〜130秒のランダム間隔で発生（同じ演出が連続しないようにする）
+    const wait = (70 + Math.random() * 60) * 1000;
+    setTimeout(() => {
+      let idx;
+      do { idx = Math.floor(Math.random() * events.length); } while (idx === lastIndex && events.length > 1);
+      lastIndex = idx;
+      try { events[idx](); } catch (e) { /* 演出の失敗でモニター本体を止めない */ }
+      scheduleNext();
+    }, wait);
+  }
+
+  // 起動から20秒後に最初のイベント（雷）で「おおっ」を作り、その後ランダム
+  setTimeout(() => { lightning(); scheduleNext(); }, 20000);
+})();
+
+// ハロウィン限定BGM（ループ再生）
+// ソース：GitHubリポジトリ内の halloween-bgm.mp3（このHTMLファイルと同じ場所に配置してください）
+(function () {
+  const bgm = document.createElement('audio');
+  bgm.id = 'hwBgm';
+  bgm.src = 'halloween-bgm.mp3';
+  bgm.loop = true;
+  bgm.volume = 0.35; // 常時流しっぱなしのBGMなので控えめな音量に
+  bgm.preload = 'auto';
+  document.body.appendChild(bgm);
+
+  function tryPlay() {
+    const p = bgm.play();
+    if (p && p.catch) p.catch(() => { /* ブラウザの自動再生制限。下のクリック待ちで再試行 */ });
+  }
+  tryPlay();
+
+  // 自動再生がブロックされた場合、画面に一度触れた時点で再生を開始する
+  // （その後はブラウザがこのページでの音声再生を許可し続ける）
+  const resumeOnInteract = () => {
+    tryPlay();
+    document.removeEventListener('click', resumeOnInteract);
+    document.removeEventListener('touchstart', resumeOnInteract);
+  };
+  document.addEventListener('click', resumeOnInteract);
+  document.addEventListener('touchstart', resumeOnInteract);
+})();
+</script>
+<!-- 🎃 HALLOWEEN THEME ここまで -->
+</body>
+</html>
