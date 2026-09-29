@@ -869,6 +869,8 @@ const LANG = {
     welcomeBack: 'Welcome Back',
     checkinBtn: '⚔ チェックイン',
     checkinSending: '送信中...',
+    checkinRetry: '⚔ もう一度チェックイン',
+    checkinConnecting: '接続中です。少しお待ちください…',
     checkinDoneTitle: 'チェックイン完了',
     monthlyLabel: '今月',
     totalLabel: '累計',
@@ -897,6 +899,8 @@ const LANG = {
     welcomeBack: 'Bem-vindo(a)',
     checkinBtn: '⚔ Check-in',
     checkinSending: 'Enviando...',
+    checkinRetry: '⚔ Tentar novamente',
+    checkinConnecting: 'Conectando... aguarde um momento',
     checkinDoneTitle: 'Check-in concluído',
     monthlyLabel: 'Este mês',
     totalLabel: 'Total',
@@ -1130,16 +1134,48 @@ function getCurrentMonthLabel() {
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ★タイムアウト付きfetch（Apps Scriptが応答しないまま固まるのを防ぐ）
+//   AbortController非対応の古いブラウザでは、Promise.raceで打ち切る
+function fetchWithTimeout(url, options, ms) {
+  options = options || {};
+  if (typeof AbortController !== 'undefined') {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+      .finally(() => clearTimeout(timer));
+  }
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
+  ]);
+}
+const FIRST_LOAD_TIMEOUT_MS = 15000; // 初回はApps Scriptの起動待ちがあるので長め
+const REFRESH_TIMEOUT_MS    = 8000;
+const CHECKIN_TIMEOUT_MS    = 15000;
+
 // ============================================================
 // チェックイン機能（NFC個人対応）
 // auto=1 パラメータがあれば自動でチェックイン実行
 // ============================================================
 const AUTO_CHECKIN = URL_PARAMS.get('auto') === '1';
+let checkinInitialized = false; // ★会員データが取れて、チェックイン処理を開始済みか
 
-function initCheckin() {
+function initCheckin(dataLoaded) {
   const personal    = document.getElementById('checkinPersonal');
   const genericBtn  = document.getElementById('genericCheckinBtn');
   const checkinHint = document.getElementById('checkinHint');
+  if (checkinInitialized) return;
+
+  // ★通信失敗でデータが取れていない時は「IDが見つからない」と誤表示せず、
+  //   再取得できた時点でもう一度ここが呼ばれる
+  if (NFC_MEMBER_ID && !dataLoaded) {
+    checkinHint.textContent  = t('checkinConnecting');
+    genericBtn.style.display = 'none';
+    return;
+  }
+  checkinInitialized = true;
+  checkinHint.textContent  = '';
+  genericBtn.style.display = 'none';
 
   if (NFC_MEMBER_ID && nfcMember) {
     // カテゴリに合わせてタブを切り替え
@@ -1173,92 +1209,108 @@ async function doCheckin() {
   const beforeMonthly = nfcMember.monthly;
   const beforeTotal   = nfcMember.total;
 
-  // ボタンがある場合のみ操作（手動モード）
-  const btn = document.getElementById('checkinBtn');
+  const btn      = document.getElementById('checkinBtn');
+  const personal = document.getElementById('checkinPersonal');
+  const done     = document.getElementById('checkinDone');
+  const doneIcon = done.querySelector('.mcd-icon');
+  const doneTtl  = done.querySelector('.mcd-title');
+
   if (btn) { btn.disabled = true; btn.textContent = t('checkinSending'); }
 
-  // auto=1 の場合はすぐに「処理中」表示
+  // auto=1 は「送信中」表示（完了前に✅を出さない）
   if (AUTO_CHECKIN) {
-    const done = document.getElementById('checkinDone');
+    personal.classList.remove('show');
+    if (doneIcon) doneIcon.textContent = '⏳';
+    if (doneTtl)  doneTtl.textContent  = t('checkinSending');
     document.getElementById('doneeName').textContent   = nfcMember.name;
     document.getElementById('doneMonthly').textContent = nfcMember.monthly;
-    document.getElementById('doneTotal').textContent   = nfcMember.total.toLocaleString();
+    document.getElementById('doneTotal').textContent   = Number(nfcMember.total || 0).toLocaleString();
     done.classList.add('show');
   }
 
   function showSuccess(monthly, total) {
-    document.getElementById('checkinPersonal').classList.remove('show');
-    const done = document.getElementById('checkinDone');
-    done.classList.add('show');
+    const m  = Number.isFinite(Number(monthly)) ? Number(monthly) : nfcMember.monthly;
+    const tt = Number.isFinite(Number(total))   ? Number(total)   : nfcMember.total;
+    personal.classList.remove('show');
+    if (doneIcon) doneIcon.textContent = '✅';
+    if (doneTtl)  doneTtl.textContent  = t('checkinDoneTitle');
     document.getElementById('doneeName').textContent   = nfcMember.name;
-    document.getElementById('doneMonthly').textContent = monthly;
-    document.getElementById('doneTotal').textContent   = total.toLocaleString();
+    document.getElementById('doneMonthly').textContent = m;
+    document.getElementById('doneTotal').textContent   = Number(tt || 0).toLocaleString();
+    done.classList.add('show');
     setTimeout(() => { window.location.href = window.location.pathname; }, 4000);
   }
 
-  // ★Apps Script側の応答がうまく届かなかった時に使う保険：
-  //   「本当に失敗したのか」を最新データを取り直して確認する。
-  //   （Apps Scriptは処理自体は成功しているのに、応答だけ遅延・失敗することがある）
+  // ★失敗時：自動モードでも必ず「もう一度」ボタンを出す（画面が止まったままにしない）
+  function showRetry(msg) {
+    checkinDone = false;
+    done.classList.remove('show');
+    personal.classList.add('show');
+    document.getElementById('checkinName').textContent    = nfcMember.name;
+    document.getElementById('checkinMonthly').textContent = nfcMember.monthly;
+    document.getElementById('checkinTotal').textContent   = Number(nfcMember.total || 0).toLocaleString();
+    if (btn) { btn.disabled = false; btn.textContent = t('checkinRetry'); }
+    showMobileToast(msg);
+  }
+
+  // ★Apps Scriptは処理自体は成功しているのに、応答だけ遅延・失敗することがある。
+  //   最新データを取り直して、本当に失敗したかを確認する（最大3回・間隔を空けて）
   async function verifyActuallyFailed() {
-    try {
-      const controller = new AbortController();
-      const timeoutId  = setTimeout(() => controller.abort(), 6000);
-      const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (!Array.isArray(data.members)) return null;
-      const fresh = data.members.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim());
-      if (!fresh) return null;
-      allMembers = data.members;
-      nfcMember  = fresh;
-      const increased = fresh.monthly > beforeMonthly || fresh.total > beforeTotal;
-      return { increased, fresh };
-    } catch (e2) {
-      return null; // 確認もできない＝本当に通信が繋がっていない
+    for (let i = 0; i < 3; i++) {
+      if (i > 0) await sleep(2000);
+      try {
+        const res  = await fetchWithTimeout(`${SHEET_API_URL}?t=${Date.now()}`, {}, REFRESH_TIMEOUT_MS);
+        const data = await res.json();
+        if (!Array.isArray(data.members)) continue;
+        const fresh = data.members.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim());
+        if (!fresh) continue;
+        allMembers = data.members;
+        nfcMember  = fresh;
+        const increased = fresh.monthly > beforeMonthly || fresh.total > beforeTotal || fresh.checkedInToday === true;
+        if (increased) return { increased: true, fresh };
+      } catch (e2) { /* 次の試行へ */ }
     }
+    return null;
+  }
+
+  async function postCheckin() {
+    const res = await fetchWithTimeout(SHEET_API_URL, {
+      method: 'POST',
+      body:   JSON.stringify({ id: NFC_MEMBER_ID }),
+    }, CHECKIN_TIMEOUT_MS);
+    return res.json();
   }
 
   try {
-    const res  = await fetch(SHEET_API_URL, {
-      method: 'POST',
-      body:   JSON.stringify({ id: NFC_MEMBER_ID }),
-    });
-    const data = await res.json();
+    let data = await postCheckin();
+    // ★混雑（ロック待ち）の時は自動で1回だけ再送
+    if (!data.success && data.error === 'server busy, try again') {
+      await sleep(1500);
+      data = await postCheckin();
+    }
 
     if (data.success) {
-      // 完了画面を更新（実際の数値に）
       showSuccess(data.monthly, data.total);
-      // チェックイン直後に即座にランキングを更新
-      fetchData(true);
+      fetchData(true); // ランキングも即更新
+    } else if (data.already) {
+      // 本日チェックイン済みは正常な状態
+      checkinDone = true;
+      showSuccess(data.monthly, data.total);
+      showMobileToast(t('alreadyCheckedIn')(nfcMember.name));
+    } else if (data.error === 'server busy, try again') {
+      showRetry(t('serverBusy'));
     } else {
-      checkinDone = false;
-      if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
-      if (data.already) {
-        // ★本日チェックイン済みは正常な状態。エラーではなく落ち着いた案内にする
-        checkinDone = true;
-        showSuccess(data.monthly, data.total || 0);
-        showMobileToast(t('alreadyCheckedIn')(nfcMember.name));
-      } else if (data.error === 'server busy, try again') {
-        // ★ロック混雑（同時タップ集中）。壊れているわけではないので専用メッセージ
-        showMobileToast(t('serverBusy'));
-      } else {
-        showMobileToast(t('errorGeneric'));
-      }
+      showRetry(t('errorGeneric'));
     }
-  } catch(e) {
-    // ★fetch自体が失敗 or レスポンスの解析に失敗した場合、
-    //   「本当に失敗したか」を確認してから表示する
-    //  （サーバー側は実は処理済みで、応答だけ届かなかったケースを救済する）
+  } catch (e) {
+    // 通信失敗・タイムアウト → 本当に失敗したかを確認してから表示
     const check = await verifyActuallyFailed();
     if (check && check.increased) {
       checkinDone = true;
       showSuccess(check.fresh.monthly, check.fresh.total);
-      fetchData(true); // ランキング表示も即座に更新
-      // エラーは出さない（実際には成功しているため）
+      fetchData(true);
     } else {
-      checkinDone = false;
-      if (btn) { btn.disabled = false; btn.textContent = t('checkinBtn'); }
-      showMobileToast(t('errorNetwork'));
+      showRetry(t('errorNetwork'));
     }
   }
 }
@@ -1347,79 +1399,92 @@ function fireConfetti() {
 // ============================================================
 // データ取得
 // ============================================================
+let pollTimer     = null;
+let fetchInFlight = false;
+let dataLoadedOnce = false; // ★一度でも正常データを取得できたか
+
 async function fetchData(isRefresh = false) {
+  // ★同時に複数の取得が走らないようにする（チェックイン直後の更新などと重複防止）
+  if (fetchInFlight) return;
+  fetchInFlight = true;
   fetchElapsed = 0;
   if (!isRefresh) showOverlay('loadingOv');
 
   let newMembers = null;
   let fetchFailed = false;
   try {
-    // ★通信が固まって無制限に待ち続けないよう、6秒でタイムアウトさせる
-    // （AbortController非対応の古いTVブラウザでは、この保護なしで通常のfetchを行う）
-    let fetchOptions = {};
-    let timeoutId = null;
-    if (typeof AbortController !== 'undefined') {
-      const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 6000);
-      fetchOptions = { signal: controller.signal };
+    try {
+      const timeoutMs = dataLoadedOnce ? REFRESH_TIMEOUT_MS : FIRST_LOAD_TIMEOUT_MS;
+      const res  = await fetchWithTimeout(`${SHEET_API_URL}?t=${Date.now()}`, {}, timeoutMs);
+      const data = await res.json();
+      if (data.error || !Array.isArray(data.members)) throw new Error(data.error||'invalid');
+      newMembers = data.members;
+      isOnline = true;
+      lastGoodFetch = Date.now();
+    } catch(e) {
+      console.error(e);
+      // サンプルデータは使わない：前回の正常データを表示し続ける
+      isOnline = false;
+      fetchFailed = true;
     }
-    const res  = await fetch(`${SHEET_API_URL}?t=${Date.now()}`, fetchOptions);
-    if (timeoutId) clearTimeout(timeoutId);
-    const data = await res.json();
-    if (data.error || !Array.isArray(data.members)) throw new Error(data.error||'invalid');
-    newMembers = data.members;
-    isOnline = true;
-    lastGoodFetch = Date.now();
-  } catch(e) {
-    console.error(e);
-    // サンプルデータは使わない：前回の正常データを表示し続ける
-    isOnline = false;
-    fetchFailed = true;
-  }
-  updateConnBadge();
+    updateConnBadge();
 
-  // ★データに実際の変化があったかを比較（順位・回数・帯などが1つでも変わっていればtrue）
-  const newSnapshot = newMembers ? JSON.stringify(newMembers) : null;
-  const hasChanged  = newMembers && newSnapshot !== lastDataSnapshot;
+    const newSnapshot = newMembers ? JSON.stringify(newMembers) : null;
+    const hasChanged  = newMembers && newSnapshot !== lastDataSnapshot;
+    const firstSuccess = newMembers && !dataLoadedOnce;
+    if (newMembers) dataLoadedOnce = true;
 
-  if (!isRefresh) {
-    // 初回読み込みは必ず描画
-    if (newMembers) allMembers = newMembers;
-    lastDataSnapshot = newSnapshot;
-    if (NFC_MEMBER_ID) {
-      nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+    if (!isRefresh) {
+      // 初回読み込みは必ず描画
+      if (newMembers) allMembers = newMembers;
+      lastDataSnapshot = newSnapshot;
+      if (NFC_MEMBER_ID) {
+        nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+      }
+      checkTitleChanges(allMembers);
+      hideAllOverlays();
+      setLastUpdate();
+      renderPC();
+      renderMobile();
+      initCheckin(dataLoadedOnce);
+    } else if (hasChanged) {
+      // 変化があった時だけ、フェード演出つきで再描画
+      document.getElementById('pcScreen').classList.add('fading');
+      await sleep(550); showOverlay('refreshOv');
+
+      allMembers = newMembers;
+      lastDataSnapshot = newSnapshot;
+      if (NFC_MEMBER_ID) {
+        nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
+      }
+      checkTitleChanges(allMembers);
+      hideAllOverlays();
+      document.getElementById('pcScreen').classList.remove('fading');
+      setLastUpdate();
+      renderPC();
+      renderMobile();
+      // ★初回が通信失敗だった場合、ここで初めてチェックインを開始する
+      if (firstSuccess) initCheckin(true);
+    } else {
+      if (newMembers) setLastUpdate();
     }
-    checkTitleChanges(allMembers);
+  } catch (err) {
+    // ★描画中のエラーで画面が止まらないようにする
+    console.error('[fetchData]', err);
+  } finally {
     hideAllOverlays();
-    setLastUpdate();
-    renderPC();
-    renderMobile();
-    initCheckin();
-  } else if (hasChanged) {
-    // ★変化があった時だけ、フェード演出つきで再描画
-    document.getElementById('pcScreen').classList.add('fading');
-    await sleep(550); showOverlay('refreshOv');
-
-    allMembers = newMembers;
-    lastDataSnapshot = newSnapshot;
-    if (NFC_MEMBER_ID) {
-      nfcMember = allMembers.find(m => String(m.id).trim() === String(NFC_MEMBER_ID).trim()) || null;
-    }
-    checkTitleChanges(allMembers);
-    hideAllOverlays();
-    document.getElementById('pcScreen').classList.remove('fading');
-    setLastUpdate();
-    renderPC();
-    renderMobile();
-  } else {
-    // ★変化なし：画面は一切さわらず、最終更新時刻だけ静かに更新
-    if (newMembers) setLastUpdate();
+    const pcs = document.getElementById('pcScreen');
+    if (pcs) pcs.classList.remove('fading');
+    fetchInFlight = false;
+    // ★通信失敗時は3秒後に再試行。取得ループは常に1本だけ
+    const nextInterval = fetchFailed ? 3 * 1000 : FETCH_INTERVAL_MS;
+    clearTimeout(pollTimer);
+    pollTimer = setTimeout(() => fetchData(true), nextInterval);
   }
-
-  // ★通信に失敗した時は10秒待たず、3秒後にすぐ再試行して早期復帰を狙う
-  const nextInterval = fetchFailed ? 3 * 1000 : FETCH_INTERVAL_MS;
-  setTimeout(() => fetchData(true), nextInterval);
 }
+
+// ★スマホで「戻る」やNFCで同じタブが再表示された時、古い画面のまま止まらないよう読み直す
+window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 
 // ============================================================
 // PC レンダリング
