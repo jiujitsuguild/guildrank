@@ -256,7 +256,7 @@ body {
       <div class="member-count" style="margin-bottom:0;">
         Wi-Fiを確認してもう一度カードをかざしてください
       </div>
-      <button class="back-btn" onclick="location.reload()">再試行</button>
+      <button class="back-btn" onclick="doCheckin()">再試行</button>
     </div>
 
   </div>
@@ -268,6 +268,25 @@ body {
 // ============================================================
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
 const CLOSE_DELAY   = 3000; // 完了後に閉じるまでの時間（ミリ秒）
+const POST_TIMEOUT  = 15000; // ★送信の待ち時間上限（これを過ぎたらグルグルを止める）
+const CHECK_TIMEOUT = 8000;  // ★「実は成功してた？」確認の待ち時間上限
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// ★タイムアウト付きfetch（Apps Scriptが応答しないまま固まるのを防ぐ）
+function fetchWithTimeout(url, options, ms) {
+  options = options || {};
+  if (typeof AbortController !== 'undefined') {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, Object.assign({}, options, { signal: controller.signal }))
+      .finally(() => clearTimeout(timer));
+  }
+  return Promise.race([
+    fetch(url, options),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
+  ]);
+}
 
 // URLパラメータからIDを取得
 const params = new URLSearchParams(window.location.search);
@@ -311,49 +330,80 @@ function startCloseCountdown(barId, hintId) {
 // ============================================================
 // チェックイン処理
 // ============================================================
+let running = false;
+
+async function postCheckin() {
+  const res = await fetchWithTimeout(SHEET_API_URL, {
+    method: 'POST',
+    body:   JSON.stringify({ id: MEMBER_ID }),
+  }, POST_TIMEOUT);
+  return res.json();
+}
+
+// ★応答が届かなかった時、サーバー側では処理済みかもしれないので確認する
+//   （Apps Scriptは処理は成功しているのに、応答だけ遅れることがある）
+async function checkAlreadyDone() {
+  for (let i = 0; i < 2; i++) {
+    if (i > 0) await sleep(2000);
+    try {
+      const res  = await fetchWithTimeout(`${SHEET_API_URL}?t=${Date.now()}`, {}, CHECK_TIMEOUT);
+      const data = await res.json();
+      if (!Array.isArray(data.members)) continue;
+      const m = data.members.find(x => String(x.id).trim() === String(MEMBER_ID).trim());
+      if (m && m.checkedInToday === true) return m;
+    } catch (e) { /* 次の試行へ */ }
+  }
+  return null;
+}
+
+function showDone(kind, d) {
+  const p = kind === 'success' ? 'success' : 'already';
+  document.getElementById(p + 'Name').textContent    = d.name || '';
+  document.getElementById(p + 'Monthly').textContent = d.monthly != null ? d.monthly : '—';
+  document.getElementById(p + 'Total').textContent   = d.total != null ? Number(d.total).toLocaleString() : '—';
+  showState(kind === 'success' ? 'stateSuccess' : 'stateAlready');
+  startCloseCountdown(kind === 'success' ? 'progressBar' : 'progressBar2', kind === 'success' ? 'closeHint' : null);
+}
+
 async function doCheckin() {
+  if (running) return;
   if (!MEMBER_ID) {
     showState('stateNotFound');
     return;
   }
-
+  running = true;
   showState('stateLoading');
 
   try {
-    const res  = await fetch(SHEET_API_URL, {
-      method: 'POST',
-      body:   JSON.stringify({ id: MEMBER_ID }),
-    });
-    const data = await res.json();
+    let data = await postCheckin();
+    // ★混雑（同時タップでロック待ち）の時は自動で1回だけ再送
+    if (!data.success && data.error === 'server busy, try again') {
+      await sleep(1500);
+      data = await postCheckin();
+    }
 
     if (data.success) {
-      // チェックイン成功
-      document.getElementById('successName').textContent    = data.name || '';
-      document.getElementById('successMonthly').textContent = data.monthly;
-      document.getElementById('successTotal').textContent   = Number(data.total).toLocaleString();
-      showState('stateSuccess');
-      startCloseCountdown('progressBar', 'closeHint');
-
+      showDone('success', data);
     } else if (data.already) {
-      // 本日チェックイン済み
-      document.getElementById('alreadyName').textContent    = data.name || '';
-      document.getElementById('alreadyMonthly').textContent = data.monthly;
-      document.getElementById('alreadyTotal').textContent   = Number(data.total).toLocaleString();
-      showState('stateAlready');
-      startCloseCountdown('progressBar2', null);
-
+      showDone('already', data);
     } else if (data.error === 'member not found') {
       showState('stateNotFound');
-
     } else {
       showState('stateError');
     }
-
-  } catch(e) {
+  } catch (e) {
+    // 通信失敗・タイムアウト → 実は成功していないか確認してからエラー表示
     console.error(e);
-    showState('stateError');
+    const m = await checkAlreadyDone();
+    if (m) showDone('success', m);
+    else   showState('stateError');
+  } finally {
+    running = false;
   }
 }
+
+// ★スマホの「戻る」などで古い画面（グルグル中など）が復元された時は読み直す
+window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 
 // ============================================================
 // 起動
