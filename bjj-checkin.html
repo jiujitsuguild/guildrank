@@ -2,11 +2,26 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<!--
+  =====================================================================
+  柔術ギルド — チェックイン専用ページ（軽量版 v3）
+
+  NFCカードのURL例:
+  https://あなたのURL/bjj-checkin.html?id=1
+
+  v3の変更点:
+  ・送信に失敗したら自動で最大3回まで再送する
+    （サーバー側が「本日チェックイン済み」を弾くので、再送しても二重には増えない）
+  ・エラー画面に原因（タイムアウト／接続不可など）を小さく表示
+  ・画面の右下に版数(v3)を表示（古いファイルが残っていないか確認用）
+  =====================================================================
+-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BJJ チェックイン</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
 :root {
   --bg:    #04060a;
   --card:  #131b2a;
@@ -18,6 +33,7 @@
   --green: #50c878;
   --red:   #e05050;
 }
+
 body {
   background: var(--bg);
   color: var(--white);
@@ -27,75 +43,261 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.01) 3px, rgba(255,255,255,0.01) 6px),
+    repeating-linear-gradient(90deg, transparent, transparent 3px, rgba(255,255,255,0.008) 3px, rgba(255,255,255,0.008) 6px);
 }
-.container { width: 100%; max-width: 400px; text-align: center; }
-.logo { font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 6px; color: var(--gold-dim); margin-bottom: 40px; }
-.card { background: var(--card); border: 1px solid #243050; border-radius: 8px; padding: 36px 28px; position: relative; overflow: hidden; }
+
+.container {
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* ロゴ */
+.logo {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 6px;
+  color: var(--gold-dim);
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+/* カード */
+.card {
+  background: var(--card);
+  border: 1px solid #243050;
+  border-radius: 8px;
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold-light) 50%, var(--gold) 70%, transparent);
+}
+
+/* ローディング状態 */
 .state { display: none; }
 .state.active { display: block; }
-.icon { font-size: 52px; margin-bottom: 16px; display: block; }
-.state-title { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 4px; margin-bottom: 20px; }
+
+/* アイコン */
+.icon {
+  font-size: 52px;
+  margin-bottom: 16px;
+  display: block;
+  animation: iconPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes iconPop {
+  from { opacity:0; transform:scale(0.5); }
+  to   { opacity:1; transform:scale(1); }
+}
+
+/* テキスト */
+.state-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
 .state-title.gold  { color: var(--gold); }
 .state-title.green { color: var(--green); }
 .state-title.red   { color: var(--red); }
-.member-name { font-size: 28px; font-weight: 900; color: var(--white); margin-bottom: 8px; }
-.member-count { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
-.member-count span { color: var(--gold); font-weight: 700; font-size: 18px; }
-.progress-wrap { height: 3px; background: #243050; border-radius: 2px; overflow: hidden; margin-top: 24px; }
-.progress-bar { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); width: 100%; }
-.close-hint { font-size: 11px; letter-spacing: 2px; color: var(--muted); margin-top: 14px; }
-.spinner { width: 48px; height: 48px; border: 3px solid #243050; border-top-color: var(--gold); border-radius: 50%; margin: 0 auto 20px; }
-.back-btn { margin-top: 20px; padding: 12px 28px; background: transparent; border: 1px solid var(--gold-dim); border-radius: 3px; color: var(--gold); }
-.already-badge { display: inline-block; background: rgba(80,200,120,0.12); border: 1px solid rgba(80,200,120,0.4); border-radius: 3px; padding: 6px 16px; margin-bottom: 20px; }
+
+.member-name {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.member-count {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.8;
+}
+.member-count span {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* プログレスバー（完了後のカウントダウン） */
+.progress-wrap {
+  height: 3px;
+  background: #243050;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  border-radius: 2px;
+  width: 100%;
+  transition: width linear;
+}
+
+.close-hint {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  margin-top: 14px;
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+}
+
+/* スピナー */
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid #243050;
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 20px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* エラー時の戻るボタン */
+.back-btn {
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: transparent;
+  border: 1px solid var(--gold-dim);
+  border-radius: 3px;
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.back-btn:hover { background: rgba(212,168,76,0.1); }
+
+/* すでにチェックイン済みの場合 */
+.already-badge {
+  display: inline-block;
+  background: rgba(80,200,120,0.12);
+  border: 1px solid rgba(80,200,120,0.4);
+  border-radius: 3px;
+  padding: 6px 16px;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--green);
+  font-family: 'Cinzel', serif;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* エラー原因の小さな表示／版数 */
+.err-detail {
+  font-size: 11px;
+  color: #4a5470;
+  margin-top: 14px;
+  line-height: 1.6;
+}
+.ver {
+  margin-top: 18px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #3a445f;
+  font-family: 'Cinzel', serif;
+}
 </style>
 </head>
 <body>
+
 <div class="container">
   <div class="logo">⚔ BJJ Guild</div>
+
   <div class="card">
+
+    <!-- ローディング -->
     <div class="state active" id="stateLoading">
       <div class="spinner"></div>
-      <div class="state-title gold">チェックイン中...</div>
+      <div class="state-title gold" id="loadingText">チェックイン中...</div>
     </div>
+
+    <!-- 成功 -->
     <div class="state" id="stateSuccess">
       <span class="icon">✅</span>
       <div class="state-title green">チェックイン完了</div>
       <div class="member-name" id="successName">—</div>
-      <div class="member-count">今月 <span id="successMonthly">0</span> 回<br>累計 <span id="successTotal">0</span> 回</div>
-      <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+      <div class="member-count">
+        今月 <span id="successMonthly">0</span> 回<br>
+        累計 <span id="successTotal">0</span> 回
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
       <div class="close-hint" id="closeHint">3秒後に閉じます...</div>
     </div>
+
+    <!-- すでにチェックイン済み -->
     <div class="state" id="stateAlready">
       <span class="icon">👋</span>
       <div class="already-badge">本日チェックイン済み</div>
       <div class="member-name" id="alreadyName">—</div>
-      <div class="member-count">今月 <span id="alreadyMonthly">0</span> 回<br>累計 <span id="alreadyTotal">0</span> 回</div>
-      <div class="progress-wrap"><div class="progress-bar" id="progressBar2"></div></div>
+      <div class="member-count">
+        今月 <span id="alreadyMonthly">0</span> 回<br>
+        累計 <span id="alreadyTotal">0</span> 回
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar2"></div>
+      </div>
       <div class="close-hint">3秒後に閉じます...</div>
     </div>
+
+    <!-- エラー：会員が見つからない -->
     <div class="state" id="stateNotFound">
       <span class="icon">❓</span>
       <div class="state-title red">会員が見つかりません</div>
-      <div class="member-count" style="margin-bottom:0;">IDを確認してスタッフに声をかけてください</div>
+      <div class="member-count" style="margin-bottom:0;">
+        IDを確認してスタッフに声をかけてください
+      </div>
       <button class="back-btn" onclick="try{window.open('','_self');}catch(e){} window.close();">閉じる</button>
     </div>
+
+    <!-- エラー：通信エラー -->
     <div class="state" id="stateError">
       <span class="icon">⚠️</span>
       <div class="state-title red">通信エラー</div>
-      <div class="member-count" style="margin-bottom:0;">Wi-Fiを確認してもう一度カードをかざしてください</div>
+      <div class="member-count" style="margin-bottom:0;">
+        Wi-Fiを確認してもう一度カードをかざしてください
+      </div>
       <button class="back-btn" onclick="doCheckin()">再試行</button>
+      <div class="err-detail" id="errDetail"></div>
     </div>
+
   </div>
+  <div class="ver" id="ver"></div>
 </div>
 
 <script>
+// ============================================================
+// ★★★ 設定 ★★★
+// ============================================================
+const VERSION       = 'v3';
 const SHEET_API_URL = 'https://script.google.com/macros/s/AKfycbxsNt0BEs8MR1oGvsn4v6bTpLeq-qd6mOzYJCvqGgmdjlkXDvVZKE7Qnxkx5GUed8hquQ/exec';
-const CLOSE_DELAY   = 3000;
-const POST_TIMEOUT  = 15000;
-const CHECK_TIMEOUT = 8000;
+const CLOSE_DELAY   = 3000;  // 完了後に閉じるまでの時間（ミリ秒）
+const POST_TIMEOUT  = 10000; // ★1回の送信の待ち時間上限
+const MAX_ATTEMPTS  = 3;     // ★失敗した時に自動で試す回数（合計）
+const RETRY_WAIT    = [0, 1500, 3000]; // ★再送の前に待つ時間
+
+document.getElementById('ver').textContent = VERSION;
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// ★タイムアウト付きfetch（Apps Scriptが応答しないまま固まるのを防ぐ）
 function fetchWithTimeout(url, options, ms) {
   options = options || {};
   if (typeof AbortController !== 'undefined') {
@@ -110,27 +312,39 @@ function fetchWithTimeout(url, options, ms) {
   ]);
 }
 
+// URLパラメータからIDを取得
 const params = new URLSearchParams(window.location.search);
 const MEMBER_ID = params.get('id') || '';
 
+// ============================================================
+// 状態切り替え
+// ============================================================
 function showState(id) {
   document.querySelectorAll('.state').forEach(el => el.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
+// ============================================================
+// 完了後のカウントダウン → ページを閉じる
+// ============================================================
 function startCloseCountdown(barId, hintId) {
   const bar   = document.getElementById(barId);
   const hint  = document.getElementById(hintId || 'closeHint');
   const start = Date.now();
+
   function tick() {
     const elapsed = Date.now() - start;
     const remain  = Math.max(0, CLOSE_DELAY - elapsed);
     const pct     = (remain / CLOSE_DELAY) * 100;
+
     if (bar) bar.style.width = pct + '%';
     if (hint) hint.textContent = `${Math.ceil(remain / 1000)}秒後に閉じます...`;
+
     if (remain > 0) {
       requestAnimationFrame(tick);
     } else {
+      // ページを閉じる（閉じられない場合はブランクページへ）
+      // ※NFCで開いたタブはブラウザの仕様でwindow.close()が無視されることがある
       try { window.open('', '_self'); window.close(); } catch(e) {}
       setTimeout(() => { window.location.href = 'about:blank'; }, 300);
     }
@@ -138,6 +352,9 @@ function startCloseCountdown(barId, hintId) {
   requestAnimationFrame(tick);
 }
 
+// ============================================================
+// チェックイン処理
+// ============================================================
 let running = false;
 
 async function postCheckin() {
@@ -148,27 +365,11 @@ async function postCheckin() {
   return res.json();
 }
 
-// ★「今日チェックイン済みか」という項目は存在しないため使わない。
-//   代わりに「送信前より回数が増えているか」で本当に成功したか判定する。
-async function fetchMember() {
-  const res  = await fetchWithTimeout(`${SHEET_API_URL}?t=${Date.now()}`, {}, CHECK_TIMEOUT);
-  const data = await res.json();
-  if (!Array.isArray(data.members)) return null;
-  return data.members.find(x => String(x.id).trim() === String(MEMBER_ID).trim()) || null;
-}
-
-async function checkAlreadyDone(before) {
-  for (let i = 0; i < 2; i++) {
-    if (i > 0) await sleep(2000);
-    try {
-      const m = await fetchMember();
-      if (!m) continue;
-      const beforeMonthly = before ? before.monthly : -1;
-      const beforeTotal   = before ? before.total   : -1;
-      if (m.monthly > beforeMonthly || m.total > beforeTotal) return m;
-    } catch (e) { }
-  }
-  return null;
+function describeError(e) {
+  if (!e) return '不明';
+  if (e.name === 'AbortError' || e.message === 'timeout') return '応答なし（タイムアウト）';
+  if (e instanceof SyntaxError) return 'サーバーの応答が不正';
+  return '接続できません';
 }
 
 function showDone(kind, d) {
@@ -180,6 +381,12 @@ function showDone(kind, d) {
   startCloseCountdown(kind === 'success' ? 'progressBar' : 'progressBar2', kind === 'success' ? 'closeHint' : null);
 }
 
+function showError(reason) {
+  const t = new Date().toLocaleTimeString('ja-JP');
+  document.getElementById('errDetail').textContent = `詳細: ${reason} ／ ${MAX_ATTEMPTS}回試行 ／ ${t}`;
+  showState('stateError');
+}
+
 async function doCheckin() {
   if (running) return;
   if (!MEMBER_ID) {
@@ -187,43 +394,55 @@ async function doCheckin() {
     return;
   }
   running = true;
+  document.getElementById('loadingText').textContent = 'チェックイン中...';
   showState('stateLoading');
 
-  // ★送信前の回数を控えておく（失敗時に「本当に失敗したか」を確認するため）
-  let before = null;
-  try { before = await fetchMember(); } catch (e) { /* 取れなくても続行 */ }
+  let hadFailure = false; // 1回でも「結果が分からない失敗」があったか
+  let lastReason = '';
 
   try {
-    let data = await postCheckin();
-    if (!data.success && data.error === 'server busy, try again') {
-      await sleep(1500);
-      data = await postCheckin();
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      if (attempt > 1) {
+        document.getElementById('loadingText').textContent = `再接続中... (${attempt}/${MAX_ATTEMPTS})`;
+        await sleep(RETRY_WAIT[attempt - 1]);
+      }
+      try {
+        const data = await postCheckin();
+
+        if (data.success) { showDone('success', data); return; }
+
+        if (data.already) {
+          // ★前の送信が「実は成功していた」場合もここに来る。
+          //   その場合は本人にとって初回のチェックインなので「完了」として見せる
+          showDone(hadFailure ? 'success' : 'already', data);
+          return;
+        }
+
+        if (data.error === 'member not found') { showState('stateNotFound'); return; }
+
+        // 混雑（server busy）やその他のサーバー側エラー → 再送
+        hadFailure = true;
+        lastReason = 'サーバーが混み合っています（' + (data.error || '不明') + '）';
+      } catch (e) {
+        // 通信失敗・タイムアウト・応答が壊れている → 再送
+        console.error(e);
+        hadFailure = true;
+        lastReason = describeError(e);
+      }
     }
-    if (data.success) {
-      showDone('success', data);
-    } else if (data.already) {
-      showDone('already', data);
-    } else if (data.error === 'member not found') {
-      showState('stateNotFound');
-    } else {
-      // ★送信自体は返ってきたが失敗した場合も、念のため実際に増えていないか確認
-      const m = await checkAlreadyDone(before);
-      if (m) showDone('success', m);
-      else   showState('stateError');
-    }
-  } catch (e) {
-    // ★通信自体が失敗・タイムアウトした場合
-    console.error(e);
-    const m = await checkAlreadyDone(before);
-    if (m) showDone('success', m);
-    else   showState('stateError');
+    // 全部失敗
+    showError(lastReason);
   } finally {
     running = false;
   }
 }
 
+// ★スマホの「戻る」などで古い画面（グルグル中など）が復元された時は読み直す
 window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload(); });
 
+// ============================================================
+// 起動
+// ============================================================
 doCheckin();
 </script>
 </body>
