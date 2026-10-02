@@ -57,7 +57,7 @@ body {
 body::before {
   content: ''; position: fixed; inset: 0;
   background: radial-gradient(ellipse 900px 600px at 50% -80px, rgba(212,168,76,0.05) 0%, transparent 70%);
-  animation: breathe 18s ease-in-out infinite alternate;
+  opacity: 0.8; /* ★軽量化：画面全体を拡大・明滅させる「呼吸」演出は固定にした */
   pointer-events: none; z-index: 0;
 }
 @keyframes breathe { from{opacity:0.6;transform:scale(1);} to{opacity:1;transform:scale(1.08);} }
@@ -123,19 +123,19 @@ body::before {
 .p-card { display:grid; grid-template-columns:60px 1fr auto; align-items:center; gap:18px; padding:20px 22px; border:1px solid var(--border); border-radius:4px; background:var(--card); position:relative; overflow:hidden; animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 .p-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; }
 .p-card::after  { content:''; position:absolute; inset:0; background:linear-gradient(90deg,rgba(255,255,255,0.012),transparent 40%); pointer-events:none; }
-.p-card.a-r1  { border-color:var(--gold-dim); background:linear-gradient(135deg,#1a2235,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both,rank1Pulse 6s ease-in-out 1s infinite; }
+.p-card.a-r1  { border-color:var(--gold-dim); background:linear-gradient(135deg,#1a2235,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both; box-shadow:0 0 56px var(--g1),inset 0 1px 0 rgba(212,168,76,0.3); /* ★軽量化：光の脈動をやめて固定 */ }
 .p-card.a-r1::before { background:linear-gradient(180deg,var(--gold-light),var(--gold)); }
 .p-card.a-r2  { border-color:rgba(180,180,195,0.3); box-shadow:0 0 24px var(--g2); animation-delay:0.15s; }
 .p-card.a-r2::before { background:linear-gradient(180deg,#d8d8e8,#909098); }
 .p-card.a-r3  { border-color:rgba(170,105,55,0.3); box-shadow:0 0 20px var(--g3); animation-delay:0.25s; }
 .p-card.a-r3::before { background:linear-gradient(180deg,#d08860,#7a4828); }
-.p-card.ka-r1 { border-color:var(--kids-a-dim); background:linear-gradient(135deg,#0e1e35,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both,kaRank1Pulse 6s ease-in-out 1s infinite; }
+.p-card.ka-r1 { border-color:var(--kids-a-dim); background:linear-gradient(135deg,#0e1e35,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both; box-shadow:0 0 56px var(--ka1),inset 0 1px 0 rgba(90,172,240,0.3); }
 .p-card.ka-r1::before { background:linear-gradient(180deg,#90d0f8,var(--kids-a)); }
 .p-card.ka-r2 { border-color:rgba(40,130,200,0.3); box-shadow:0 0 24px rgba(40,130,200,0.3); animation-delay:0.15s; }
 .p-card.ka-r2::before { background:linear-gradient(180deg,#4090d0,#205090); }
 .p-card.ka-r3 { border-color:rgba(80,100,200,0.3); box-shadow:0 0 20px rgba(80,100,200,0.3); animation-delay:0.25s; }
 .p-card.ka-r3::before { background:linear-gradient(180deg,#6080d8,#304090); }
-.p-card.kb-r1 { border-color:var(--kids-b-dim); background:linear-gradient(135deg,#0a1e18,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both,kbRank1Pulse 6s ease-in-out 1s infinite; }
+.p-card.kb-r1 { border-color:var(--kids-b-dim); background:linear-gradient(135deg,#0a1e18,var(--card) 60%); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) 0.05s both; box-shadow:0 0 56px var(--kb1),inset 0 1px 0 rgba(80,208,160,0.3); }
 .p-card.kb-r1::before { background:linear-gradient(180deg,#80e8c0,var(--kids-b)); }
 .p-card.kb-r2 { border-color:rgba(40,160,120,0.3); box-shadow:0 0 24px rgba(40,160,120,0.3); animation-delay:0.15s; }
 .p-card.kb-r2::before { background:linear-gradient(180deg,#40b890,#207860); }
@@ -180,7 +180,7 @@ body::before {
 .p-unit  { font-size:10px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; display:block; margin-top:1px; }
 .p-total { font-size:11px; color:var(--muted); display:block; margin-top:4px; }
 .p-total span { color:var(--white-dim); font-weight:700; }
-.crown { font-size:16px; animation:crownPulse 3s ease-in-out infinite; }
+.crown { font-size:16px; filter:drop-shadow(0 0 8px rgba(212,168,76,0.8)); /* ★軽量化：脈動をやめて固定 */ }
 @keyframes crownPulse { 0%,100%{filter:drop-shadow(0 0 4px rgba(212,168,76,0.5));} 50%{filter:drop-shadow(0 0 12px rgba(212,168,76,1));} }
 
 /* Ranking List */
@@ -450,9 +450,13 @@ html.force-pc body { overflow:hidden !important; }
 .m-last-upd { font-size:10px; letter-spacing:2px; color:var(--muted); font-family:'Cinzel',serif; text-transform:uppercase; }
 
 /* =====================================================================
-   🎃 HALLOWEEN THEME（期間限定装飾）2026
+   🎃 HALLOWEEN THEME（期間限定装飾）2026【軽量版】
    手動で戻す場合は、このブロックを丸ごと削除してください
    （この下から「🎃 HALLOWEEN THEME ここまで」のコメントの直前まで）
+
+   ★軽量化の方針：「影(box-shadow)の変化」「ぼかし(blur)」「フィルター(drop-shadow)」
+     を動かし続ける演出は、モニターのような常時表示で最も重くなるので使わない。
+     動かすのは transform（位置）と opacity（明るさ）だけにする。
    ===================================================================== */
 :root {
   --bg:         #0a0612;
@@ -511,7 +515,6 @@ body::before {
 .hw-bat {
   position: fixed; z-index: 6; pointer-events: none; opacity: 0.85;
   animation: hwBatFly linear infinite;
-  filter: drop-shadow(0 0 6px rgba(0,0,0,0.6));
 }
 @keyframes hwBatFly {
   0%   { transform: translateX(-60px) translateY(0) scale(1); }
@@ -529,7 +532,6 @@ body::before {
 .hw-ghost {
   position: fixed; z-index: 6; pointer-events: none; opacity: 0.65;
   animation: hwGhostFloat linear infinite;
-  filter: drop-shadow(0 0 8px rgba(200,107,240,0.5));
 }
 @keyframes hwGhostFloat {
   0%   { transform: translateX(-60px) translateY(0); }
@@ -549,7 +551,7 @@ body::before {
 .hw-spider-thread {
   width: 1px; margin: 0 auto; background: rgba(220,210,235,0.5);
 }
-.hw-spider-icon { display: block; text-align: center; filter: drop-shadow(0 0 5px rgba(0,0,0,0.6)); }
+.hw-spider-icon { display: block; text-align: center; }
 @keyframes hwSpiderSwing {
   0%, 100% { transform: rotate(-12deg); }
   50%      { transform: rotate(12deg); }
@@ -559,7 +561,6 @@ body::before {
 .hw-vampire {
   position: fixed; z-index: 6; pointer-events: none; opacity: 0.9;
   animation: hwVampireWalk linear infinite;
-  filter: drop-shadow(0 0 8px rgba(255,140,26,0.5));
 }
 @keyframes hwVampireWalk {
   0%   { transform: translateX(-80px) scaleX(1); }
@@ -569,54 +570,48 @@ body::before {
   100% { transform: translateX(-80px) scaleX(1); }
 }
 
-/* タイトルがたまにオレンジ⇄パープルでゆらめく演出 */
-.hdr-title, .m-title { animation: hwTitleFlicker 6s ease-in-out infinite; }
-@keyframes hwTitleFlicker {
-  0%, 88%, 100% { filter: none; }
-  90%  { filter: hue-rotate(35deg) brightness(1.15); }
-  93%  { filter: none; }
-  95%  { filter: hue-rotate(-20deg) brightness(1.1); }
-  97%  { filter: none; }
-}
-
 /* ===== 常時演出：満月・流れる雲・足元の霧 ===== */
 .hw-moon {
   position: fixed; top: 40px; right: 120px; width: 180px; height: 180px;
   border-radius: 50%; z-index: 0; pointer-events: none;
   background: radial-gradient(circle at 40% 38%, #fff6d8 0%, #ffe6a8 45%, #f0c878 100%);
-  box-shadow: 0 0 60px 20px rgba(255,220,150,0.25), 0 0 140px 60px rgba(255,180,80,0.12);
+}
+/* 月の光：影(box-shadow)を動かすのをやめ、ぼかし済みのグラデーションを重ねて「明るさ」だけゆっくり変える */
+.hw-moon::before {
+  content: ''; position: absolute; inset: -170px; border-radius: 50%; pointer-events: none;
+  /* closest-side：100% = 光の層の半径(260px)。月本体の半径(90px)は約35%の位置 */
+  background: radial-gradient(circle closest-side,
+    transparent 0%, transparent 34%,
+    rgba(255,226,160,0.36) 35%, rgba(255,205,115,0.20) 46%,
+    rgba(255,180,80,0.09) 62%, rgba(255,180,80,0.03) 82%, transparent 100%);
   animation: hwMoonGlow 8s ease-in-out infinite;
 }
 @keyframes hwMoonGlow {
-  0%, 100% { box-shadow: 0 0 60px 20px rgba(255,220,150,0.25), 0 0 140px 60px rgba(255,180,80,0.12); }
-  50%      { box-shadow: 0 0 80px 30px rgba(255,220,150,0.35), 0 0 180px 80px rgba(255,180,80,0.18); }
+  0%, 100% { opacity: 0.72; }
+  50%      { opacity: 1; }
 }
+/* 雲：ぼかしフィルターをやめ、縁が自然に薄れるグラデーションにした */
 .hw-cloud {
   position: fixed; z-index: 0; pointer-events: none;
-  width: 320px; height: 70px; border-radius: 60px;
-  background: rgba(60,40,90,0.85); filter: blur(14px);
+  width: 440px; height: 120px;
+  background: radial-gradient(ellipse at center, rgba(72,50,108,0.78) 0%, rgba(62,42,94,0.46) 46%, transparent 72%);
   animation: hwCloudDrift linear infinite;
 }
 @keyframes hwCloudDrift {
-  0%   { transform: translateX(-400px); }
+  0%   { transform: translateX(-460px); }
   100% { transform: translateX(2300px); }
 }
+/* 足元の霧：2層→1層にまとめ、動かさず固定にした（紫がかった霧が下ほど濃くなる） */
 .hw-fog {
   position: fixed; left: 0; right: 0; bottom: 0; height: 220px;
   z-index: 4; pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, rgba(160,140,200,0.10) 50%, rgba(160,140,200,0.22) 100%);
-  animation: hwFogPulse 10s ease-in-out infinite;
-}
-.hw-fog.f2 {
-  height: 140px; animation-duration: 14s; animation-delay: 4s;
-  background: linear-gradient(180deg, transparent 0%, rgba(200,107,240,0.08) 60%, rgba(200,107,240,0.18) 100%);
-}
-@keyframes hwFogPulse {
-  0%, 100% { opacity: 0.6; transform: translateX(0); }
-  50%      { opacity: 1;   transform: translateX(40px); }
+  background:
+    linear-gradient(180deg, transparent 36%, rgba(200,107,240,0.08) 75%, rgba(200,107,240,0.18) 100%),
+    linear-gradient(180deg, transparent 0%, rgba(160,140,200,0.10) 50%, rgba(160,140,200,0.22) 100%);
 }
 
-/* ===== サプライズ演出①：雷（画面が一瞬光って揺れる） ===== */
+/* ===== サプライズ演出①：雷（画面が一瞬光る） =====
+   ※以前は画面全体を揺らしていたが、一瞬フリーズする原因だったので光るだけにした */
 .hw-flash {
   position: fixed; inset: 0; z-index: 50; pointer-events: none;
   background: radial-gradient(ellipse at 50% 20%, rgba(255,255,255,0.95), rgba(200,160,255,0.6) 40%, transparent 75%);
@@ -632,27 +627,18 @@ body::before {
   70%  { opacity: 0; }
   100% { opacity: 0; }
 }
-.hw-shake { animation: hwShake 0.6s ease-in-out; }
-@keyframes hwShake {
-  0%, 100% { transform: translate(0,0); }
-  20%  { transform: translate(-6px, 4px); }
-  40%  { transform: translate(6px, -3px); }
-  60%  { transform: translate(-4px, 3px); }
-  80%  { transform: translate(4px, -2px); }
-}
 
 /* ===== サプライズ演出②：巨大な幽霊が「BOO!」と叫びながら横切る ===== */
 .hw-boo {
   position: fixed; top: 30%; left: 0; z-index: 45; pointer-events: none;
   font-size: 220px; line-height: 1;
-  filter: drop-shadow(0 0 30px rgba(200,107,240,0.8));
   animation: hwBooSwoop 4.5s ease-in-out forwards;
 }
 .hw-boo-text {
   position: absolute; top: -40px; left: 180px;
   font-family: 'Cinzel', serif; font-weight: 900; font-size: 90px;
   color: var(--gold); letter-spacing: 6px;
-  text-shadow: 0 0 20px rgba(255,140,26,0.9), 0 0 50px rgba(255,140,26,0.5);
+  text-shadow: 0 0 14px rgba(255,140,26,0.85);
   animation: hwBooTextPop 4.5s ease-out forwards;
 }
 @keyframes hwBooSwoop {
@@ -674,7 +660,6 @@ body::before {
 .hw-drop {
   position: fixed; top: -80px; z-index: 45; pointer-events: none;
   animation: hwDropFall linear forwards;
-  filter: drop-shadow(0 0 6px rgba(0,0,0,0.5));
 }
 @keyframes hwDropFall {
   0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -686,7 +671,6 @@ body::before {
 .hw-swarm {
   position: fixed; z-index: 45; pointer-events: none;
   animation: hwSwarmFly linear forwards;
-  filter: drop-shadow(0 0 5px rgba(0,0,0,0.6));
 }
 @keyframes hwSwarmFly {
   0%   { transform: translateX(-80px) translateY(0); opacity: 0; }
@@ -1946,7 +1930,7 @@ fetchData();
 })();
 </script>
 
-<!-- 🎃 HALLOWEEN THEME（期間限定装飾）— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
+<!-- 🎃 HALLOWEEN THEME（期間限定装飾）【軽量版】— 手動で戻す場合は、このコメントより下のスクリプトブロックごと削除してください -->
 <script>
 (function () {
   const bats = ['🦇', '🦇', '🦇'];
@@ -2038,26 +2022,17 @@ fetchData();
     document.body.appendChild(cloud);
   });
 
-  const fog1 = document.createElement('div'); fog1.className = 'hw-fog';
-  const fog2 = document.createElement('div'); fog2.className = 'hw-fog f2';
-  document.body.appendChild(fog1);
-  document.body.appendChild(fog2);
+  const fog = document.createElement('div'); fog.className = 'hw-fog';
+  document.body.appendChild(fog);
 })();
 
 // ===== サプライズ演出：数分に1回、ランダムで派手なイベントが発生 =====
 (function () {
-  // ※揺れは .pc-screen ではなく body にかける
-  //   （.pc-screen には画面フィット用の scale() が入っているため、
-  //     transform を上書きすると一瞬スケールが外れてカクつくのを防ぐ）
-  const shakeTarget = document.body;
-
-  // ①雷：画面が光って揺れる
+  // ①雷：画面が光る（以前は画面全体も揺らしていたが、一瞬フリーズする原因だったので光るだけ）
   function lightning() {
     const flash = document.createElement('div');
     flash.className = 'hw-flash';
     document.body.appendChild(flash);
-    shakeTarget.classList.add('hw-shake');
-    setTimeout(() => shakeTarget.classList.remove('hw-shake'), 700);
     setTimeout(() => flash.remove(), 1800);
   }
 
@@ -2074,16 +2049,16 @@ fetchData();
     setTimeout(() => ghost.remove(), 4800);
   }
 
-  // ③カボチャの雨（お菓子も混ぜて賑やかに）
+  // ③カボチャの雨（お菓子も混ぜて賑やかに）※28個→14個に減らした
   function pumpkinRain() {
     const items = ['🎃', '🎃', '🎃', '🍬', '🍭', '🍫', '🎃'];
-    const count = 28;
+    const count = 14;
     for (let i = 0; i < count; i++) {
       const d = document.createElement('div');
       d.className = 'hw-drop';
       d.textContent = items[Math.floor(Math.random() * items.length)];
       d.style.left = (Math.random() * 100) + '%';
-      d.style.fontSize = (22 + Math.random() * 26) + 'px';
+      d.style.fontSize = (24 + Math.random() * 26) + 'px';
       const dur = 3.5 + Math.random() * 2.5;
       d.style.animationDuration = dur + 's';
       d.style.animationDelay = (Math.random() * 1.8) + 's';
@@ -2092,15 +2067,15 @@ fetchData();
     }
   }
 
-  // ④コウモリの大群
+  // ④コウモリの大群 ※18匹→10匹に減らした
   function batSwarm() {
-    const count = 18;
+    const count = 10;
     for (let i = 0; i < count; i++) {
       const b = document.createElement('div');
       b.className = 'hw-swarm';
       b.textContent = '🦇';
       b.style.top = (5 + Math.random() * 85) + '%';
-      b.style.fontSize = (18 + Math.random() * 22) + 'px';
+      b.style.fontSize = (20 + Math.random() * 22) + 'px';
       const dur = 2.5 + Math.random() * 2;
       b.style.animationDuration = dur + 's';
       b.style.animationDelay = (Math.random() * 1.5) + 's';
@@ -2122,6 +2097,13 @@ fetchData();
       try { events[idx](); } catch (e) { /* 演出の失敗でモニター本体を止めない */ }
       scheduleNext();
     }, wait);
+  }
+
+  // 確認用：URLに ?hwtest=lightning / boo / rain / swarm を付けると、その演出を1.5秒後に1回だけ出す
+  const test = new URLSearchParams(location.search).get('hwtest');
+  const testMap = { lightning, boo, rain: pumpkinRain, swarm: batSwarm };
+  if (test && testMap[test]) {
+    setTimeout(() => { try { testMap[test](); } catch (e) {} }, 1500);
   }
 
   // 起動から20秒後に最初のイベント（雷）で「おおっ」を作り、その後ランダム
