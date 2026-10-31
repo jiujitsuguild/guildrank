@@ -2139,5 +2139,61 @@ fetchData();
 })();
 </script>
 <!-- 🎃 HALLOWEEN THEME ここまで -->
+
+<!-- 🏆 GUILD CUP 当日バナー（期間限定）— 2026-10-31(JST)の1日だけ、モニター画面を大会バナーに差し替える。
+     日付が変わると自動で通常のランキング表示に戻る。不要になったらこのブロックごと削除してOK。
+     確認用：URLに ?cup=1 で強制表示、?cup=0 で強制非表示 -->
+<script>
+(function () {
+  const CUP_DATE = '2026-10-31';            // 表示する日（日本時間）
+  const CUP_IMG  = 'guildcup-banner.jpg';   // このHTMLと同じ場所に配置
+
+  // TVの端末時刻やタイムゾーン設定に左右されないよう、日本時間で日付を判定する
+  function jstDate() {
+    try {
+      return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+    } catch (e) {
+      const d = new Date(Date.now() + 9 * 3600 * 1000);
+      return d.toISOString().slice(0, 10);
+    }
+  }
+  // モニター/TV表示のときだけ（スマホのチェックイン画面には出さない）
+  const isMonitor = () => window.innerWidth > 1024 || document.documentElement.classList.contains('force-pc');
+
+  const q = new URLSearchParams(location.search).get('cup');
+  function shouldShow() {
+    if (q === '0') return false;
+    if (q === '1') return true;
+    return jstDate() === CUP_DATE && isMonitor();
+  }
+
+  const style = document.createElement('style');
+  style.textContent =
+    '#guildCupBanner{position:fixed;inset:0;z-index:2147483000;background:#000;display:flex;align-items:center;justify-content:center;}' +
+    '#guildCupBanner img{width:100%;height:100%;object-fit:contain;display:block;}';
+  document.head.appendChild(style);
+
+  let el = null;
+  function sync() {
+    const show = shouldShow();
+    if (show && !el) {
+      el = document.createElement('div');
+      el.id = 'guildCupBanner';
+      const img = document.createElement('img');
+      img.src = CUP_IMG;
+      img.alt = 'GUILD CUP';
+      el.appendChild(img);
+      document.body.appendChild(el);
+    } else if (!show && el) {
+      el.remove();
+      el = null;
+    }
+  }
+  sync();
+  setInterval(sync, 30 * 1000);              // 日付をまたいだら自動で消える
+  window.addEventListener('resize', sync);
+})();
+</script>
+<!-- 🏆 GUILD CUP 当日バナー ここまで -->
 </body>
 </html>
