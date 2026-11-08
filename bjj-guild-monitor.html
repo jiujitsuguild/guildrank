@@ -1744,5 +1744,101 @@ fetchData();
 })();
 </script>
 <!-- 🏆 GUILD CUP 当日バナー ここまで -->
+
+<!-- 🎵 GUILD BGM（常設）— モニター/TV表示のときだけ、ギルドのBGMをシャッフルで連続再生する。
+     曲を足す・変えるときは、下の TRACKS に「ファイル名」と「gain（音量補正 0〜1）」を書き足すだけ。
+     gain はファイルごとの音量差を揃えるため（1が基準、小さいほど静かになる）。
+     確認用：URLに ?bgm=0 を付けると鳴らさない（イベント当日など）。
+     ※自動再生がブロックされる端末では、画面をクリック/リモコンの決定キーを1回押した時点で再生が始まる。 -->
+<script>
+(function () {
+  // ---- 設定 ----
+  const TRACKS = [
+    { src: 'guild-bgm-1.mp3', gain: 1.00 },  // 落ち着いた温かさ（基準：一番小さい曲）
+    { src: 'guild-bgm-2.mp3', gain: 0.78 },  // 少し前向き（-2.2dB 補正）
+    { src: 'guild-bgm-3.mp3', gain: 0.81 },  // 静かめ（-1.8dB 補正）
+  ];
+  const BASE_VOLUME = 0.35;   // 常時流しっぱなしなので控えめに（受付での会話や指導の声を邪魔しない）
+
+  // ---- 表示条件：モニター/TV表示のときだけ（スマホのチェックイン画面では鳴らさない） ----
+  const isMonitor = () => window.innerWidth > 1024 || document.documentElement.classList.contains('force-pc');
+  if (new URLSearchParams(location.search).get('bgm') === '0') return;
+
+  // ---- 再生順：シャッフル。切り替わりの境目で同じ曲が連続しないようにする ----
+  let queue = [], lastSrc = null;
+  function nextTrack() {
+    if (queue.length === 0) {
+      queue = TRACKS.slice();
+      for (let i = queue.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [queue[i], queue[j]] = [queue[j], queue[i]];
+      }
+      if (queue.length > 1 && queue[0].src === lastSrc) queue.push(queue.shift());
+    }
+    const t = queue.shift();
+    lastSrc = t.src;
+    return t;
+  }
+
+  const bgm = document.createElement('audio');
+  bgm.id = 'guildBgm';
+  bgm.preload = 'auto';
+  document.body.appendChild(bgm);
+
+  let failStreak = 0;       // 連続で読み込みに失敗した回数（全曲だめなら無限ループを避ける）
+  let retryTimer = null;
+
+  function load(track) {
+    bgm.src = track.src;
+    bgm.volume = Math.min(1, BASE_VOLUME * track.gain);
+  }
+  function tryPlay() {
+    if (!isMonitor()) return;
+    const p = bgm.play();
+    if (p && p.catch) p.catch(() => { /* 自動再生ブロック。下の操作待ちで再試行 */ });
+  }
+  function playNext() {
+    if (!isMonitor()) return;
+    load(nextTrack());
+    tryPlay();
+  }
+
+  bgm.addEventListener('ended', () => { failStreak = 0; playNext(); });
+  bgm.addEventListener('playing', () => { failStreak = 0; });
+  bgm.addEventListener('error', () => {
+    // 読めなかった曲は飛ばして次へ。全曲続けて失敗したら5分後にやり直す
+    failStreak += 1;
+    if (failStreak >= TRACKS.length) {
+      failStreak = 0;
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(playNext, 5 * 60 * 1000);
+      return;
+    }
+    playNext();
+  });
+
+  // ---- 自動再生ブロック対策：画面操作（クリック/タッチ/リモコンのキー）で再生開始 ----
+  const resumeOnInteract = () => {
+    if (bgm.paused) tryPlay();
+    // 再生に成功したら、以降は待たなくていい
+    if (!bgm.paused) {
+      ['click', 'touchstart', 'keydown'].forEach(ev => document.removeEventListener(ev, resumeOnInteract));
+    }
+  };
+  ['click', 'touchstart', 'keydown'].forEach(ev => document.addEventListener(ev, resumeOnInteract));
+
+  // ---- 見張り：モニター表示なのに止まっていたら再開（通信の一時切れなどの対策）。画面幅が変わったら鳴らす/止めるを切り替え ----
+  setInterval(() => {
+    if (isMonitor()) { if (bgm.paused && bgm.src && !bgm.ended) tryPlay(); }
+  }, 60 * 1000);
+  window.addEventListener('resize', () => {
+    if (isMonitor()) { if (!bgm.src) playNext(); else if (bgm.paused) tryPlay(); }
+    else bgm.pause();
+  });
+
+  if (isMonitor()) playNext();
+})();
+</script>
+<!-- 🎵 GUILD BGM ここまで -->
 </body>
 </html>
