@@ -110,6 +110,39 @@ body::before {
 .slide-bar.kids-a { background:linear-gradient(90deg,var(--kids-a-dim),var(--kids-a)); }
 .slide-bar.kids-b { background:linear-gradient(90deg,var(--kids-b-dim),var(--kids-b)); }
 
+/* ===== GUILD NEWS（お知らせ・スケジュール）スライド：アクセントは赤 =====
+   内容は guild-news.json で管理。期間内の項目があるときだけ4枚目として表示される */
+:root { --news:#e8473b; --news-dim:#6e1b17; --news-glow:rgba(232,71,59,0.35); }
+.pc-header.news-mode::before { background:linear-gradient(90deg,transparent,var(--news-dim) 30%,var(--news) 50%,var(--news-dim) 70%,transparent); }
+.s-pip.news-on  { background:var(--news); border-color:var(--news); }
+.slide-bar.news { background:linear-gradient(90deg,var(--news-dim),var(--news)); }
+.col-label.news { color:var(--news); }
+.n-col { display:flex; flex-direction:column; gap:22px; padding:28px 36px 24px 56px; }
+.n-card { position:relative; overflow:hidden; border:1px solid var(--news-dim); border-radius:4px; padding:32px 34px 34px 38px; background:linear-gradient(135deg,#2a1218,var(--card) 65%); box-shadow:0 0 48px var(--news-glow),inset 0 1px 0 rgba(232,71,59,0.3); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+.n-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg,#ff7a6e,var(--news)); }
+.n-tag { display:inline-block; font-family:'Cinzel',serif; font-size:15px; font-weight:700; letter-spacing:5px; color:#fff; background:var(--news); padding:6px 16px; border-radius:2px; text-transform:uppercase; margin-bottom:20px; }
+.n-title { font-size:40px; font-weight:900; line-height:1.3; color:var(--white); letter-spacing:1px; text-wrap:balance; }
+.n-body { margin-top:18px; font-size:26px; font-weight:400; line-height:1.7; color:var(--white-dim); text-wrap:balance; }
+/* お知らせが1件だけのときは、カードを大きく見せる */
+.n-col.solo .n-card { flex:1; max-height:640px; display:flex; flex-direction:column; justify-content:center; padding:40px 36px 44px 44px; }
+.n-col.solo .n-tag   { align-self:flex-start; font-size:17px; margin-bottom:28px; }
+.n-col.solo .n-title { font-size:46px; }
+.n-col.solo .n-body  { font-size:30px; margin-top:26px; }
+.n-concept { margin-top:auto; padding:26px 4px 0; font-size:22px; line-height:1.8; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); }
+.n-list { display:flex; flex-direction:column; gap:16px; padding:6px 0 0; flex:1; min-height:0; }
+.n-row { display:grid; grid-template-columns:340px 1fr; align-items:center; flex:1 1 0; min-height:120px; max-height:190px; border:1px solid var(--border); border-radius:4px; background:var(--card); position:relative; overflow:hidden; animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+.n-row::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--news); }
+.n-row.today { border-color:var(--news); box-shadow:0 0 36px var(--news-glow); }
+.n-date { display:flex; align-items:center; justify-content:center; gap:14px; padding:0 20px 0 28px; height:100%; border-right:1px solid var(--border); background:rgba(232,71,59,0.06); text-align:center; }
+.n-date-big { font-family:'Cinzel',serif; font-size:56px; font-weight:900; letter-spacing:2px; color:var(--white); line-height:1; font-variant-numeric:tabular-nums; }
+.n-date-mid { font-size:32px; font-weight:700; line-height:1.35; color:var(--white); letter-spacing:1px; }
+.n-dow { font-size:24px; font-weight:700; color:var(--news); border:1px solid var(--news-dim); border-radius:2px; padding:4px 12px; white-space:nowrap; }
+.n-info { padding:0 36px; display:flex; flex-direction:column; gap:8px; }
+.n-row-title { font-size:38px; font-weight:900; line-height:1.3; color:var(--white); letter-spacing:1px; }
+.n-row-sub { font-size:24px; font-weight:400; line-height:1.5; color:var(--white-dim); letter-spacing:1px; }
+.n-today { display:inline-block; margin-left:16px; font-family:'Cinzel',serif; font-size:15px; font-weight:700; letter-spacing:4px; color:#fff; background:var(--news); padding:4px 12px; border-radius:2px; vertical-align:middle; }
+.n-empty { font-size:24px; color:var(--muted); letter-spacing:2px; padding:24px 4px; }
+
 /* Podium */
 .podium-col { display:flex; flex-direction:column; padding:28px 36px 24px 56px; gap:14px; }
 .col-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:6px; color:var(--gold-dim); text-transform:uppercase; display:flex; align-items:center; gap:12px; }
@@ -503,6 +536,7 @@ html.force-pc body { overflow:hidden !important; }
         <div class="s-pip adult-on" id="pipAdult"></div>
         <div class="s-pip off"      id="pipKidsA"></div>
         <div class="s-pip off"      id="pipKidsB"></div>
+        <div class="s-pip off"      id="pipNews" style="display:none"></div>
       </div>
       <div class="slide-bar-wrap"><div class="slide-bar adult" id="slideBar"></div></div>
       <span class="next-fetch" id="pcNextFetch">Next: 5:00</span>
@@ -704,8 +738,10 @@ function applyMobileTranslations() {
   });
 }
 const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描画は変化があった時だけ）
-const SLIDE_INTERVAL_MS = 8 * 1000;
-const SLIDES            = ['adult', 'kids_a', 'kids_b'];
+const SLIDE_INTERVAL_MS      = 8 * 1000;
+const NEWS_SLIDE_INTERVAL_MS = 8 * 1000;    // お知らせの表示時間（ほかのスライドと同じ。長くしたいときはここを変える）
+const BASE_SLIDES            = ['adult', 'kids_a', 'kids_b'];
+let   SLIDES                 = BASE_SLIDES.slice();   // お知らせがある間だけ末尾に 'news' が加わる（下の GUILD NEWS 参照）
 let lastDataSnapshot = null; // ★前回取得したデータのスナップショット（変化検知用）
 
 // ============================================================
@@ -1267,13 +1303,24 @@ function renderInstructorWidget(instructors) {
 
 function renderPCSlide(cat) {
   const hdr = document.getElementById('pcHeader');
-  hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':'');
+  hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':cat==='news'?' news-mode':'');
   document.getElementById('pipAdult').className = 's-pip '+(cat==='adult' ?'adult-on':'off');
   document.getElementById('pipKidsA').className = 's-pip '+(cat==='kids_a'?'kids-a-on':'off');
   document.getElementById('pipKidsB').className = 's-pip '+(cat==='kids_b'?'kids-b-on':'off');
+  const pipNews = document.getElementById('pipNews');
+  if (pipNews) { pipNews.style.display = SLIDES.indexOf('news')>=0 ? '' : 'none'; pipNews.className = 's-pip '+(cat==='news'?'news-on':'off'); }
   const sb = document.getElementById('slideBar');
-  sb.className='slide-bar '+(cat==='adult'?'adult':cat==='kids_a'?'kids-a':'kids-b');
+  sb.className='slide-bar '+(cat==='adult'?'adult':cat==='kids_a'?'kids-a':cat==='kids_b'?'kids-b':'news');
   sb.style.width='0%';
+  // ヘッダーの見出し／月ラベルをスライドに合わせる（お知らせの間はランキング用の「月」表示を隠す）
+  const ttl = document.querySelector('.hdr-title'); if (ttl) ttl.textContent = (cat==='news' ? 'Guild News' : 'Guild Ranking');
+  const mchip = document.querySelector('.month-chip'); if (mchip) mchip.style.visibility = (cat==='news' ? 'hidden' : 'visible');
+  if (cat==='news') {
+    renderNewsSlide();
+    renderInstructorWidget([]);   // お知らせの間はインストラクター枠を隠す
+    startSlideProgress(cat);
+    return;
+  }
   const members = allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
   const instructors = allMembers.filter(m=>m.isInstructor).sort((a,b)=>b.total-a.total);
   const top3=members.slice(0,3); const rest=members.slice(3,18);
@@ -1320,19 +1367,20 @@ function renderPCSlide(cat) {
   const main=document.getElementById('pcMain');
   main.innerHTML=podiumHTML+listHTML;
   renderInstructorWidget(instructors);
-  startSlideProgress();
+  startSlideProgress(cat);
 }
 
-function startSlideProgress() {
+function startSlideProgress(cat) {
   if (slideRaf) cancelAnimationFrame(slideRaf);
   slideStart=null;
+  const dur = (cat==='news') ? NEWS_SLIDE_INTERVAL_MS : SLIDE_INTERVAL_MS;   // スライドごとの表示時間
   function animate(ts) {
     if (!slideStart) slideStart=ts;
     const elapsed=ts-slideStart;
-    const pct=Math.min((elapsed/SLIDE_INTERVAL_MS)*100,100);
+    const pct=Math.min((elapsed/dur)*100,100);
     const bar=document.getElementById('slideBar');
     if (bar) bar.style.width=pct+'%';
-    if (elapsed<SLIDE_INTERVAL_MS) { slideRaf=requestAnimationFrame(animate); }
+    if (elapsed<dur) { slideRaf=requestAnimationFrame(animate); }
     else { toggleSlide(); }
   }
   slideRaf=requestAnimationFrame(animate);
@@ -1615,6 +1663,92 @@ requestWakeLock();
   if (next <= now) next.setDate(next.getDate() + 1);
   setTimeout(() => (window.guildHardReload || (() => location.reload()))('daily'), next - now);
 })();
+
+// ============================================================
+// GUILD NEWS（お知らせ・スケジュール）— 常設
+//  ・内容は guild-news.json で管理（このHTMLは触らなくていい）
+//  ・期間内（日本時間）の項目があるときだけ、ランキング3枚の後ろに4枚目として表示。何もなければ3枚のまま
+//  ・読み込みに失敗したら前回の内容を使い続ける（初回から失敗なら4枚目は出さない）
+//  ・期間：from（表示開始日）〜 until（表示終了日）。schedule は date があれば until を省略でき、その日で自動的に消える
+// ============================================================
+const NEWS_URL        = 'guild-news.json';
+const NEWS_REFRESH_MS = 5 * 60 * 1000;
+let newsRaw = { news: [], schedule: [] };
+
+function jstToday() {   // 端末の時刻設定に左右されないよう、日本時間の「YYYY-MM-DD」で判定
+  try { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
+  catch (e) { return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10); }
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function escBr(s) { return esc(s).replace(/\n/g, '<br>'); }
+function newsItems() {
+  const today = jstToday();
+  const inRange = it => {
+    if (!it || typeof it !== 'object') return false;
+    const until = it.until || it.date || '';
+    return (!it.from || today >= it.from) && (!until || today <= until);
+  };
+  return { today, news: (newsRaw.news || []).filter(inRange), schedule: (newsRaw.schedule || []).filter(inRange) };
+}
+function applyNewsSlides() {
+  const a = newsItems();
+  const has = (a.news.length + a.schedule.length) > 0;
+  const hadNews = SLIDES.indexOf('news') >= 0;
+  if (has !== hadNews) {
+    const current = SLIDES[slideIndex];
+    SLIDES = has ? BASE_SLIDES.concat('news') : BASE_SLIDES.slice();
+    const idx = SLIDES.indexOf(current);
+    slideIndex = idx >= 0 ? idx : SLIDES.length - 1;   // お知らせが消えた場合は、次の切り替えで先頭に戻る
+  }
+  const pn = document.getElementById('pipNews'); if (pn) pn.style.display = has ? '' : 'none';
+}
+async function loadNews() {
+  try {
+    const res = await fetchWithTimeout(NEWS_URL + '?t=' + Date.now(), { cache: 'no-store' }, 8000);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if (!d || typeof d !== 'object') throw new Error('invalid');
+    newsRaw = { news: Array.isArray(d.news) ? d.news : [], schedule: Array.isArray(d.schedule) ? d.schedule : [] };
+  } catch (e) { console.warn('[news]', e); }
+  try { applyNewsSlides(); } catch (e) { console.warn('[news]', e); }
+}
+function renderNewsSlide() {
+  const a = newsItems();
+  const newsHTML = a.news.map((n, i) => `
+    <div class="n-card" style="animation-delay:${i * 0.08}s">
+      ${n.tag ? `<span class="n-tag">${esc(n.tag)}</span>` : ''}
+      <div class="n-title">${escBr(n.title)}</div>
+      ${n.body ? `<div class="n-body">${escBr(n.body)}</div>` : ''}
+    </div>`).join('');
+  const rows = a.schedule.map((s, i) => {
+    const label = String(s.date_label || '');
+    const big = /^\d{1,2}\/\d{1,2}$/.test(label);   // 「11/14」のような単日は大きく、それ以外は読みやすい大きさで
+    const isToday = !!(s.date && a.today >= s.date && a.today <= (s.until || s.date));
+    return `
+    <div class="n-row${isToday ? ' today' : ''}" style="animation-delay:${i * 0.08}s">
+      <div class="n-date">
+        <span class="${big ? 'n-date-big' : 'n-date-mid'}">${escBr(label)}</span>
+        ${s.dow ? `<span class="n-dow">${esc(s.dow)}</span>` : ''}
+      </div>
+      <div class="n-info">
+        <div class="n-row-title">${escBr(s.title)}${isToday ? '<span class="n-today">TODAY</span>' : ''}</div>
+        ${s.sub ? `<div class="n-row-sub">${escBr(s.sub)}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('pcMain').innerHTML = `
+    <div class="n-col${a.news.length === 1 ? ' solo' : ''}">
+      <div class="col-label news">▸ Information</div>
+      ${newsHTML}
+      <div class="n-concept">技術を持つ者が集まり、<br>技術で語り合う場所。</div>
+    </div>
+    <div class="list-col">
+      <div class="col-label news" style="justify-content:flex-end;">▸ Schedule</div>
+      <div class="n-list">${rows || '<div class="n-empty">予定が決まり次第、お知らせします。</div>'}</div>
+    </div>`;
+}
+loadNews();
+setInterval(loadNews, NEWS_REFRESH_MS);
 
 fetchData();
 </script>
