@@ -1,7 +1,7 @@
 {
   "_説明": "モニターの「GUILD NEWS」「Tournaments」に出る内容です。news=お知らせ（左）、schedule=今後の予定（右）、tournaments=大会ごとのエントリー一覧。期間内のものだけが表示され、期限が過ぎると自動で消えます。1つも表示するものがない種類は、そのページ自体が出ません。",
   "_項目の意味": "tag=小さな赤いラベル／title=見出し／body=説明文／from=表示開始日／until=表示終了日（どちらも YYYY-MM-DD、日本時間。省略可）／date_label=日付の表示／dow=曜日／sub=補足／date=開催日（YYYY-MM-DD。入れると当日に TODAY が付き、until を省略してもその日で自動で消える）。文中の \\n は改行。",
-  "_大会の項目": "tournaments の各大会：name=大会名／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
+  "_大会の項目": "tournaments の各大会：name=正式な大会名／short=モニターに出す短い名前（省略すると name）／color=カードの色（#rrggbb、省略すると自動）／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
 
   "news": [
     {
@@ -46,6 +46,7 @@
   "tournaments": [
     {
       "name": "Central Japan Open Jiu Jitsu Championship 2026",
+      "short": "セントラル（ギ）",
       "date_label": "12/12(土)・13(日)",
       "venue": "青山記念武道館（愛知県半田市）",
       "date": "2026-12-12",
@@ -67,6 +68,7 @@
     },
     {
       "name": "Central Japan Open No-gi Championship 2026",
+      "short": "セントラル（ノーギ）",
       "date_label": "12/13(日)",
       "venue": "青山記念武道館（愛知県半田市）",
       "date": "2026-12-13",
@@ -77,6 +79,7 @@
     },
     {
       "name": "Nagoya International Jiu Jitsu Championship 2027",
+      "short": "名古屋インターナショナル",
       "date_label": "2027/1/9(土)・10(日)",
       "venue": "愛知県武道館（名古屋市）",
       "date": "2027-01-09",
@@ -89,6 +92,7 @@
     },
     {
       "name": "2027 Guam Marianas Pro Tokyo（Gi）",
+      "short": "グアム・マリアナス・プロ",
       "date_label": "2027/2/20(土)",
       "venue": "駒沢オリンピック公園体育館（東京都世田谷区）",
       "date": "2027-02-20",
