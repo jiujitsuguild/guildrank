@@ -1,13 +1,15 @@
 {
   "_説明": "モニターの「GUILD NEWS」「Tournaments」に出る内容です。news=お知らせ（左）、schedule=今後の予定（右）、tournaments=大会ごとのエントリー一覧。期間内のものだけが表示され、期限が過ぎると自動で消えます。1つも表示するものがない種類は、そのページ自体が出ません。",
-  "_項目の意味": "tag=小さな赤いラベル／title=見出し／body=説明文／from=表示開始日／until=表示終了日（どちらも YYYY-MM-DD、日本時間。省略可）／date_label=日付の表示／dow=曜日／sub=補足／date=開催日（YYYY-MM-DD。入れると当日に TODAY が付き、until を省略してもその日で自動で消える）。文中の \\n は改行。",
-  "_大会の項目": "tournaments の各大会：name=正式な大会名／short=モニターに出す短い名前（省略すると name）／color=カードの色（#rrggbb、省略すると自動）／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
+  "_項目の意味": "tag=小さな赤いラベル／title_pt・body_pt・sub_pt=ポルトガル語（日本語の下に小さく出る）／title=見出し／body=説明文／from=表示開始日／until=表示終了日（どちらも YYYY-MM-DD、日本時間。省略可）／date_label=日付の表示／dow=曜日／sub=補足／date=開催日（YYYY-MM-DD。入れると当日に TODAY が付き、until を省略してもその日で自動で消える）。文中の \\n は改行。",
+  "_大会の項目": "tournaments の各大会：name=正式な大会名／org=大会名の上に小さく出す主催など／short=モニターに出す短い名前（省略すると name）／color=カードの色（#rrggbb、省略すると自動）／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
 
   "news": [
     {
       "tag": "COMING SOON",
       "title": "ギルドオリジナル\n柔術着 予約受付",
       "body": "詳細は、もうしばらく\nお待ちください。",
+      "title_pt": "Reservas do kimono original da Guild",
+      "body_pt": "Em breve, mais detalhes. Aguarde só mais um pouquinho!",
       "until": "2026-12-31"
     }
   ],
@@ -17,19 +19,24 @@
       "date": "2026-11-14",
       "date_label": "11/14",
       "dow": "土",
-      "title": "ブルテリア"
+      "title": "ブルテリア",
+      "title_pt": "Torneio Kids"
     },
     {
       "date": "2026-11-15",
       "date_label": "11/15",
       "dow": "日",
       "title": "柔術で勝つための柔道クラス",
-      "sub": "vol.4 ・ 18:00〜20:00"
+      "sub": "vol.4 ・ 18:00〜20:00",
+      "title_pt": "Aula de judô pra vencer no jiujitsu",
+      "sub_pt": "Vol. 4 ・ 18h às 20h"
     },
     {
       "date_label": "11月下旬\n〜12月上旬",
       "title": "帯昇格式",
       "sub": "日程は調整中です",
+      "title_pt": "Graduação",
+      "sub_pt": "Data a confirmar",
       "until": "2026-12-10"
     },
     {
@@ -37,7 +44,8 @@
       "until": "2026-12-13",
       "date_label": "12/12・13",
       "dow": "土・日",
-      "title": "セントラル"
+      "title": "セントラル",
+      "title_pt": "Central Japan Open"
     }
   ],
 
@@ -104,6 +112,7 @@
     {
       "name": "Master International Jiu-Jitsu Championship - Asia 2026",
       "short": "アジアマスター",
+      "org": "IBJJF 主催",
       "date_label": "12/4(金)〜6(日)",
       "venue": "愛知県武道館（名古屋市）",
       "date": "2026-12-04",

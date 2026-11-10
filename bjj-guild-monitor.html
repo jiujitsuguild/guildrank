@@ -140,6 +140,11 @@ body::before {
 .n-info { padding:0 36px; display:flex; flex-direction:column; gap:8px; }
 .n-row-title { font-size:38px; font-weight:900; line-height:1.3; color:var(--white); letter-spacing:1px; }
 .n-row-sub { font-size:24px; font-weight:400; line-height:1.5; color:var(--white-dim); letter-spacing:1px; }
+.n-pt { margin-top:10px; font-size:22px; font-weight:400; line-height:1.45; color:var(--muted); letter-spacing:.5px; font-style:italic; text-wrap:balance; }
+.n-card .n-pt { margin-top:22px; font-size:26px; color:#a9a9b6; }
+.n-col.solo .n-card .n-pt { font-size:28px; margin-top:24px; padding-top:20px; border-top:1px solid var(--news-dim); }
+.n-concept .n-pt { margin-top:8px; font-size:18px; }
+.n-date-pt { display:block; margin-top:6px; font-size:18px; font-style:italic; font-weight:400; color:var(--muted); letter-spacing:.5px; line-height:1.3; }
 .n-today { display:inline-block; margin-left:16px; font-family:'Cinzel',serif; font-size:15px; font-weight:700; letter-spacing:4px; color:#fff; background:var(--news); padding:4px 12px; border-radius:2px; vertical-align:middle; }
 .n-empty { font-size:24px; color:var(--muted); letter-spacing:2px; padding:24px 4px; }
 
@@ -157,7 +162,8 @@ body::before {
 .t-card { --tc:var(--tour); position:relative; min-width:0; border:1px solid color-mix(in srgb,var(--tc) 45%,#1c1c28); border-radius:4px; padding:.8em .8em .8em 1.1em; background:linear-gradient(135deg,#1a1830,var(--card) 60%); box-shadow:0 0 40px color-mix(in srgb,var(--tc) 18%,transparent),inset 0 1px 0 color-mix(in srgb,var(--tc) 35%,transparent); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 .t-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:8px; background:var(--tc); }
 .t-head { display:grid; grid-template-columns:1fr auto; grid-template-areas:'title count' 'meta meta'; align-items:center; gap:.2em .6em; }
-.t-title { grid-area:title; font-family:'Noto Sans JP',sans-serif; font-size:1.5em; font-weight:900; line-height:1.25; min-height:2.5em; display:flex; align-items:center; color:var(--tc); letter-spacing:2px; text-wrap:balance; }
+.t-title { grid-area:title; font-family:'Noto Sans JP',sans-serif; font-size:1.5em; font-weight:900; line-height:1.25; min-height:2.5em; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; color:var(--tc); letter-spacing:2px; text-wrap:balance; }
+.t-org { font-family:'Cinzel','Noto Sans JP',serif; font-size:.6em; font-weight:700; letter-spacing:3px; color:var(--white-dim); margin-bottom:.15em; }
 .t-count { grid-area:count; font-family:'Cinzel',serif; font-size:1.8em; font-weight:900; line-height:1; color:var(--tc); white-space:nowrap; }
 .t-count small { font-family:'Noto Sans JP',sans-serif; font-size:.5em; font-weight:700; margin-left:4px; color:var(--white-dim); }
 .t-meta { grid-area:meta; min-height:2.9em; text-wrap:balance; font-size:.85em; line-height:1.45; color:var(--white-dim); letter-spacing:1px; }
@@ -1757,6 +1763,7 @@ function renderNewsSlide() {
       ${n.tag ? `<span class="n-tag">${esc(n.tag)}</span>` : ''}
       <div class="n-title">${escBr(n.title)}</div>
       ${n.body ? `<div class="n-body">${escBr(n.body)}</div>` : ''}
+      ${(n.title_pt || n.body_pt) ? `<div class="n-pt">${[n.title_pt, n.body_pt].filter(Boolean).map(escBr).join('<br>')}</div>` : ''}
     </div>`).join('');
   const rows = a.schedule.map((s, i) => {
     const label = String(s.date_label || '');
@@ -1765,12 +1772,13 @@ function renderNewsSlide() {
     return `
     <div class="n-row${isToday ? ' today' : ''}" style="animation-delay:${i * 0.08}s">
       <div class="n-date">
-        <span class="${big ? 'n-date-big' : 'n-date-mid'}">${escBr(label)}</span>
+        <span class="${big ? 'n-date-big' : 'n-date-mid'}">${escBr(label)}${s.date_pt ? `<span class="n-date-pt">${escBr(s.date_pt)}</span>` : ''}</span>
         ${s.dow ? `<span class="n-dow">${esc(s.dow)}</span>` : ''}
       </div>
       <div class="n-info">
         <div class="n-row-title">${escBr(s.title)}${isToday ? '<span class="n-today">TODAY</span>' : ''}</div>
         ${s.sub ? `<div class="n-row-sub">${escBr(s.sub)}</div>` : ''}
+        ${(s.title_pt || s.sub_pt) ? `<div class="n-pt">${[s.title_pt, s.sub_pt].filter(Boolean).map(escBr).join(' ・ ')}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -1778,7 +1786,7 @@ function renderNewsSlide() {
     <div class="n-col${a.news.length === 1 ? ' solo' : ''}">
       <div class="col-label news">▸ Information</div>
       ${newsHTML}
-      <div class="n-concept">技術を持つ者が集まり、<br>技術で語り合う場所。</div>
+      <div class="n-concept">技術を持つ者が集まり、<br>技術で語り合う場所。<div class="n-pt">Um lugar onde a técnica conecta pessoas.</div></div>
     </div>
     <div class="list-col">
       <div class="col-label news" style="justify-content:flex-end;">▸ Schedule</div>
@@ -1806,7 +1814,7 @@ function tourCard(t, today) {
   return `
     <section class="t-card" style="--tc:${esc(tourColor(t))}">
       <div class="t-head">
-        <div class="t-title">${escBr(t.short || t.name)}${isToday ? '<span class="n-today">TODAY</span>' : ''}</div>
+        <div class="t-title">${t.org ? `<span class="t-org">${esc(t.org)}</span>` : ''}<div>${escBr(t.short || t.name)}${isToday ? '<span class="n-today">TODAY</span>' : ''}</div></div>
         <div class="t-meta"><div>${esc(t.date_label || '')}</div>${t.venue ? '<div>' + esc(t.venue) + '</div>' : ''}</div>
         <div class="t-count">${entries.length}<small>名</small></div>
       </div>
