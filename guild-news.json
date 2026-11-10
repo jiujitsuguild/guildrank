@@ -79,7 +79,7 @@
     },
     {
       "name": "Nagoya International Jiu Jitsu Championship 2027",
-      "short": "名古屋インターナショナル",
+      "short": "名古屋\nインターナショナル",
       "date_label": "2027/1/9(土)・10(日)",
       "venue": "愛知県武道館（名古屋市）",
       "date": "2027-01-09",
@@ -92,13 +92,24 @@
     },
     {
       "name": "2027 Guam Marianas Pro Tokyo（Gi）",
-      "short": "グアム・マリアナス・プロ",
+      "short": "グアム\nマリアナス・プロ",
       "date_label": "2027/2/20(土)",
-      "venue": "駒沢オリンピック公園体育館（東京都世田谷区）",
+      "venue": "駒沢オリンピック公園体育館（東京）",
       "date": "2027-02-20",
       "until": "2027-02-20",
       "entries": [
         { "name": "壁谷 亮佑", "belt": "紫", "cls": "アダルト18 ヘビー級", "open": true }
+      ]
+    },
+    {
+      "name": "Master International Jiu-Jitsu Championship - Asia 2026",
+      "short": "アジアマスター",
+      "date_label": "12/4(金)〜6(日)",
+      "venue": "愛知県武道館（名古屋市）",
+      "date": "2026-12-04",
+      "until": "2026-12-06",
+      "entries": [
+        { "name": "壁谷 亮佑", "belt": "紫", "cls": "マスター1 スーパーヘビー級" }
       ]
     }
   ]
