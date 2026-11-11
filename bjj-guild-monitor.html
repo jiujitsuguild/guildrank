@@ -777,8 +777,8 @@ function applyMobileTranslations() {
 const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描画は変化があった時だけ）
 const SLIDE_INTERVAL_MS      = 5 * 1000;    // ランキング（アダルト／Aクラス／Bクラス）の1枚あたりの表示時間
 const NEWS_SLIDE_INTERVAL_MS = 8 * 1000;    // GUILD NEWS の表示時間
-const TOUR_PAGE_SIZE         = 7;           // 大会は1ページに最大7つ。超えたら次のページ（スライド）に続く
-const isTour = c => /^tour\d*$/.test(c);   // 'tour', 'tour2', 'tour3'…
+const TOUR_MAX               = 7;           // 大会は1ページに最大7つ（開催日が近い順）。8つ目以降は、先の大会が終わって空きができたら順に出る
+const isTour = c => c === 'tour';
 const TOUR_SLIDE_INTERVAL_MS = 8 * 1000;    // 大会エントリー一覧の表示時間
 const BASE_SLIDES            = ['adult', 'kids_a', 'kids_b'];
 let   SLIDES                 = BASE_SLIDES.slice();   // 該当する内容がある間だけ、末尾に 'news'（お知らせ）→'tour'（大会）が加わる（下の GUILD NEWS 参照）
@@ -1359,7 +1359,7 @@ function renderPCSlide(cat) {
   const mchip = document.querySelector('.month-chip'); if (mchip) mchip.style.visibility = (cat==='news' || isTour(cat) ? 'hidden' : 'visible');
   document.getElementById('pcMain').classList.toggle('tour-on', isTour(cat));   // 大会スライドは中央の仕切り線なしの1枚レイアウト
   if (cat==='news' || isTour(cat)) {
-    if (cat==='news') renderNewsSlide(); else renderTournamentSlide(cat);
+    if (cat==='news') renderNewsSlide(); else renderTournamentSlide();
     renderInstructorWidget([]);   // お知らせ・大会の間はインストラクター枠を隠す
     startSlideProgress(cat);
     return;
@@ -1738,9 +1738,7 @@ function applyNewsSlides() {
   const a = newsItems();
   const hasNews = (a.news.length + a.schedule.length) > 0;
   const hasTour = a.tournaments.length > 0;
-  const tourPages = Math.ceil(a.tournaments.length / TOUR_PAGE_SIZE);
-  const tourIds = Array.from({ length: tourPages }, (_, i) => i ? 'tour' + (i + 1) : 'tour');
-  const next = BASE_SLIDES.concat(hasNews ? ['news'] : [], tourIds);   // 順番：ランキング3枚 → お知らせ → 大会
+  const next = BASE_SLIDES.concat(hasNews ? ['news'] : [], hasTour ? ['tour'] : []);   // 順番：ランキング3枚 → お知らせ → 大会
   if (next.join() !== SLIDES.join()) {
     const current = SLIDES[slideIndex];
     SLIDES = next;
@@ -1826,15 +1824,12 @@ function tourCard(t, today) {
       <div class="t-grid">${cells || '<div class="n-empty">エントリー受付中</div>'}</div>
     </section>`;
 }
-function renderTournamentSlide(cat) {
+function renderTournamentSlide() {
   const a = newsItems();
   // 開催日が近い順に、全部を縦1列に並べる
   const all = a.tournaments.slice().sort((x, y) => String(x.date || '9999').localeCompare(String(y.date || '9999')));
-  const pages = Math.max(1, Math.ceil(all.length / TOUR_PAGE_SIZE));
-  const per = Math.ceil(all.length / pages);   // 8大会なら 4+4 のように、ページ間でなるべく均等に分ける
-  const pg = Math.min(pages - 1, Math.max(0, (parseInt(String(cat).slice(4), 10) || 1) - 1));
-  const list = all.slice(pg * per, (pg + 1) * per);
-  const noteText = [pages > 1 ? `PAGE ${pg + 1} / ${pages}` : '', newsRaw.tournaments_note || ''].filter(Boolean).join('　・　');
+  const list = all.slice(0, TOUR_MAX);   // 常に1ページ。表示するのは開催日が近い最大7大会
+  const noteText = newsRaw.tournaments_note || '';
   const note = noteText ? `<div class="t-note">${esc(noteText)}</div>` : '';
   const main = document.getElementById('pcMain');
   main.innerHTML = `
