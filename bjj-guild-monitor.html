@@ -161,18 +161,19 @@ body::before {
 .t-col { --k:1; --n:1; font-size:calc(var(--k) * 20px); display:grid; grid-template-columns:repeat(var(--n),minmax(0,1fr)); gap:1em; align-items:start; align-content:start; min-height:0; overflow:hidden; }
 .t-card { --tc:var(--tour); position:relative; min-width:0; border:1px solid color-mix(in srgb,var(--tc) 45%,#1c1c28); border-radius:4px; padding:.8em .8em .8em 1.1em; background:linear-gradient(135deg,#1a1830,var(--card) 60%); box-shadow:0 0 40px color-mix(in srgb,var(--tc) 18%,transparent),inset 0 1px 0 color-mix(in srgb,var(--tc) 35%,transparent); animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
 .t-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:8px; background:var(--tc); }
-.t-head { display:grid; grid-template-columns:1fr auto; grid-template-areas:'title count' 'meta meta'; align-items:center; gap:.2em .6em; }
-.t-title { grid-area:title; font-family:'Noto Sans JP',sans-serif; font-size:1.5em; font-weight:900; line-height:1.25; min-height:2.5em; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; color:var(--tc); letter-spacing:2px; text-wrap:balance; }
+.t-head { display:grid; grid-template-columns:1fr auto; grid-template-areas:'title title' 'meta count'; align-items:center; gap:.2em .6em; }
+.t-title { grid-area:title; font-family:'Noto Sans JP',sans-serif; font-size:1.5em; font-weight:900; line-height:1.25; min-height:2.5em; letter-spacing:1px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; color:var(--tc); text-wrap:balance; }
 .t-org { font-family:'Cinzel','Noto Sans JP',serif; font-size:.6em; font-weight:700; letter-spacing:3px; color:var(--white-dim); margin-bottom:.15em; }
-.t-count { grid-area:count; font-family:'Cinzel',serif; font-size:1.8em; font-weight:900; line-height:1; color:var(--tc); white-space:nowrap; }
+.t-count { grid-area:count; align-self:end; font-family:'Cinzel',serif; font-size:1.8em; font-weight:900; line-height:1; color:var(--tc); white-space:nowrap; }
 .t-count small { font-family:'Noto Sans JP',sans-serif; font-size:.5em; font-weight:700; margin-left:4px; color:var(--white-dim); }
-.t-meta { grid-area:meta; min-height:2.9em; text-wrap:balance; font-size:.85em; line-height:1.45; color:var(--white-dim); letter-spacing:1px; }
+.t-meta { grid-area:meta; min-height:4.4em; text-wrap:balance; font-size:.85em; line-height:1.45; color:var(--white-dim); letter-spacing:1px; }
 .t-grid { margin-top:.6em; display:flex; flex-direction:column; gap:.3em; }
 .t-ent { border-left:6px solid var(--belt); background:rgba(255,255,255,0.04); border-radius:2px; padding:.35em .6em .4em .7em; min-width:0; display:block; }
 .t-ent-top { display:flex; align-items:center; gap:.5em; }
 .t-ent-name { font-size:1.15em; font-weight:700; line-height:1.3; color:var(--white); letter-spacing:1px; }
 .t-sex { font-size:.7em; font-weight:700; color:var(--tour); border:1px solid var(--tour-dim); border-radius:2px; padding:1px 8px; white-space:nowrap; }
 .t-open { margin-left:.4em; font-family:'Cinzel',serif; font-size:.65em; font-weight:700; letter-spacing:3px; color:#fff; background:color-mix(in srgb,var(--tc) 35%,#000); border:1px solid var(--tc); border-radius:2px; padding:2px 9px; white-space:nowrap; }
+.t-belt { display:inline-block; min-width:1.3em; text-align:center; margin-right:.5em; font-size:.85em; font-weight:700; color:#fff; background:color-mix(in srgb,var(--belt) 40%,#000); border:1px solid var(--belt); border-radius:2px; padding:0 .25em; line-height:1.3; }
 .t-ent-sub { font-size:.85em; line-height:1.4; color:var(--white-dim); letter-spacing:.5px; }
 .t-col.cols2 .t-grid { display:grid; grid-template-columns:1fr 1fr; gap:.25em .5em; }
 .t-note { position:absolute; right:56px; bottom:12px; font-size:15px; letter-spacing:2px; color:var(--muted); }
@@ -776,6 +777,8 @@ function applyMobileTranslations() {
 const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描画は変化があった時だけ）
 const SLIDE_INTERVAL_MS      = 5 * 1000;    // ランキング（アダルト／Aクラス／Bクラス）の1枚あたりの表示時間
 const NEWS_SLIDE_INTERVAL_MS = 8 * 1000;    // GUILD NEWS の表示時間
+const TOUR_PAGE_SIZE         = 7;           // 大会は1ページに最大7つ。超えたら次のページ（スライド）に続く
+const isTour = c => /^tour\d*$/.test(c);   // 'tour', 'tour2', 'tour3'…
 const TOUR_SLIDE_INTERVAL_MS = 8 * 1000;    // 大会エントリー一覧の表示時間
 const BASE_SLIDES            = ['adult', 'kids_a', 'kids_b'];
 let   SLIDES                 = BASE_SLIDES.slice();   // 該当する内容がある間だけ、末尾に 'news'（お知らせ）→'tour'（大会）が加わる（下の GUILD NEWS 参照）
@@ -1340,23 +1343,23 @@ function renderInstructorWidget(instructors) {
 
 function renderPCSlide(cat) {
   const hdr = document.getElementById('pcHeader');
-  hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':cat==='news'?' news-mode':cat==='tour'?' tour-mode':'');
+  hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':cat==='news'?' news-mode':isTour(cat)?' tour-mode':'');
   document.getElementById('pipAdult').className = 's-pip '+(cat==='adult' ?'adult-on':'off');
   document.getElementById('pipKidsA').className = 's-pip '+(cat==='kids_a'?'kids-a-on':'off');
   document.getElementById('pipKidsB').className = 's-pip '+(cat==='kids_b'?'kids-b-on':'off');
   const pipNews = document.getElementById('pipNews');
   if (pipNews) { pipNews.style.display = SLIDES.indexOf('news')>=0 ? '' : 'none'; pipNews.className = 's-pip '+(cat==='news'?'news-on':'off'); }
   const pipTour = document.getElementById('pipTour');
-  if (pipTour) { pipTour.style.display = SLIDES.indexOf('tour')>=0 ? '' : 'none'; pipTour.className = 's-pip '+(cat==='tour'?'tour-on':'off'); }
+  if (pipTour) { pipTour.style.display = SLIDES.some(isTour) ? '' : 'none'; pipTour.className = 's-pip '+(isTour(cat)?'tour-on':'off'); }
   const sb = document.getElementById('slideBar');
   sb.className='slide-bar '+(cat==='adult'?'adult':cat==='kids_a'?'kids-a':cat==='kids_b'?'kids-b':cat==='news'?'news':'tour');
   sb.style.width='0%';
   // ヘッダーの見出し／月ラベルをスライドに合わせる（お知らせ・大会の間はランキング用の「月」表示を隠す）
-  const ttl = document.querySelector('.hdr-title'); if (ttl) ttl.textContent = (cat==='news' ? 'Guild News' : cat==='tour' ? 'Tournaments' : 'Guild Ranking');
-  const mchip = document.querySelector('.month-chip'); if (mchip) mchip.style.visibility = (cat==='news' || cat==='tour' ? 'hidden' : 'visible');
-  document.getElementById('pcMain').classList.toggle('tour-on', cat==='tour');   // 大会スライドは中央の仕切り線なしの1枚レイアウト
-  if (cat==='news' || cat==='tour') {
-    if (cat==='news') renderNewsSlide(); else renderTournamentSlide();
+  const ttl = document.querySelector('.hdr-title'); if (ttl) ttl.textContent = (cat==='news' ? 'Guild News' : isTour(cat) ? 'Tournaments' : 'Guild Ranking');
+  const mchip = document.querySelector('.month-chip'); if (mchip) mchip.style.visibility = (cat==='news' || isTour(cat) ? 'hidden' : 'visible');
+  document.getElementById('pcMain').classList.toggle('tour-on', isTour(cat));   // 大会スライドは中央の仕切り線なしの1枚レイアウト
+  if (cat==='news' || isTour(cat)) {
+    if (cat==='news') renderNewsSlide(); else renderTournamentSlide(cat);
     renderInstructorWidget([]);   // お知らせ・大会の間はインストラクター枠を隠す
     startSlideProgress(cat);
     return;
@@ -1413,7 +1416,7 @@ function renderPCSlide(cat) {
 function startSlideProgress(cat) {
   if (slideRaf) cancelAnimationFrame(slideRaf);
   slideStart=null;
-  const dur = (cat==='news') ? NEWS_SLIDE_INTERVAL_MS : (cat==='tour') ? TOUR_SLIDE_INTERVAL_MS : SLIDE_INTERVAL_MS;   // スライドごとの表示時間
+  const dur = (cat==='news') ? NEWS_SLIDE_INTERVAL_MS : (isTour(cat)) ? TOUR_SLIDE_INTERVAL_MS : SLIDE_INTERVAL_MS;   // スライドごとの表示時間
   function animate(ts) {
     if (!slideStart) slideStart=ts;
     const elapsed=ts-slideStart;
@@ -1735,7 +1738,9 @@ function applyNewsSlides() {
   const a = newsItems();
   const hasNews = (a.news.length + a.schedule.length) > 0;
   const hasTour = a.tournaments.length > 0;
-  const next = BASE_SLIDES.concat(hasNews ? ['news'] : [], hasTour ? ['tour'] : []);   // 順番：ランキング3枚 → お知らせ → 大会
+  const tourPages = Math.ceil(a.tournaments.length / TOUR_PAGE_SIZE);
+  const tourIds = Array.from({ length: tourPages }, (_, i) => i ? 'tour' + (i + 1) : 'tour');
+  const next = BASE_SLIDES.concat(hasNews ? ['news'] : [], tourIds);   // 順番：ランキング3枚 → お知らせ → 大会
   if (next.join() !== SLIDES.join()) {
     const current = SLIDES[slideIndex];
     SLIDES = next;
@@ -1797,7 +1802,7 @@ function renderNewsSlide() {
 //  guild-news.json の tournaments に大会ごとのエントリーを書く。最もエントリーが多い大会を左に大きく、残りを右に積む。
 //  期限(until=最終日、省略時は date)を過ぎると自動で消える。内容が多いときは文字を自動で小さくして収める。
 const BELT_COLORS = { '白': '#e9e9ee', '青': '#3a7bff', '紫': '#9a5cf0', '茶': '#8b5a2b', '黒': '#5a5a64' };
-const TOUR_COLORS = ['#ff5a4d', '#5a9bff', '#3fd38a', '#f0b93a', '#c08bff', '#4fd4e0'];
+const TOUR_COLORS = ['#ff5a4d', '#5a9bff', '#3fd38a', '#f0b93a', '#c08bff', '#4fd4e0', '#ff7fb5', '#ff9f43'];
 function tourColor(t) {
   if (t.color) return t.color;
   const i = (newsRaw.tournaments || []).indexOf(t);
@@ -1809,7 +1814,7 @@ function tourCard(t, today) {
   const cells = entries.map(e => `
       <div class="t-ent" style="--belt:${BELT_COLORS[e.belt] || '#6a7490'}">
         <div class="t-ent-top"><span class="t-ent-name">${esc(e.name)}</span>${e.sex ? `<span class="t-sex">${esc(e.sex)}</span>` : ''}${e.open ? '<span class="t-open">OPEN</span>' : ''}</div>
-        <div class="t-ent-sub">${e.belt ? esc(e.belt) + '帯 ・ ' : ''}${esc(e.cls || '')}</div>
+        <div class="t-ent-sub">${e.belt ? `<span class="t-belt" title="${esc(e.belt)}帯">${esc(e.belt)}</span>` : ''}${esc(e.cls || '')}</div>
       </div>`).join('');
   return `
     <section class="t-card" style="--tc:${esc(tourColor(t))}">
@@ -1821,19 +1826,25 @@ function tourCard(t, today) {
       <div class="t-grid">${cells || '<div class="n-empty">エントリー受付中</div>'}</div>
     </section>`;
 }
-function renderTournamentSlide() {
+function renderTournamentSlide(cat) {
   const a = newsItems();
   // 開催日が近い順に、全部を縦1列に並べる
-  const list = a.tournaments.slice().sort((x, y) => String(x.date || '9999').localeCompare(String(y.date || '9999')));
-  const note = newsRaw.tournaments_note ? `<div class="t-note">${esc(newsRaw.tournaments_note)}</div>` : '';
+  const all = a.tournaments.slice().sort((x, y) => String(x.date || '9999').localeCompare(String(y.date || '9999')));
+  const pages = Math.max(1, Math.ceil(all.length / TOUR_PAGE_SIZE));
+  const per = Math.ceil(all.length / pages);   // 8大会なら 4+4 のように、ページ間でなるべく均等に分ける
+  const pg = Math.min(pages - 1, Math.max(0, (parseInt(String(cat).slice(4), 10) || 1) - 1));
+  const list = all.slice(pg * per, (pg + 1) * per);
+  const noteText = [pages > 1 ? `PAGE ${pg + 1} / ${pages}` : '', newsRaw.tournaments_note || ''].filter(Boolean).join('　・　');
+  const note = noteText ? `<div class="t-note">${esc(noteText)}</div>` : '';
   const main = document.getElementById('pcMain');
   main.innerHTML = `
     <div class="t-wrap single">
-      <div class="t-col" style="--n:${Math.min(list.length, 5) || 1}">${list.map(t => tourCard(t, a.today)).join('')}</div>
+      <div class="t-col" style="--n:${Math.min(list.length, 8) || 1}">${list.map(t => tourCard(t, a.today)).join('')}</div>
     </div>${note}`;
   // 収まらないときは全体を少しずつ縮める。0.6倍でも収まらなければ2列にして再挑戦
   main.querySelectorAll('.t-col').forEach(col => {
-    const fit = (min) => { let k = 1; col.style.setProperty('--k', k); while (col.scrollHeight > col.clientHeight + 1 && k > min) { k = Math.round((k - 0.04) * 100) / 100; col.style.setProperty('--k', k); } return col.scrollHeight <= col.clientHeight + 1; };
+    const kMax = Math.min(1, (col.clientWidth / (parseInt(col.style.getPropertyValue('--n')) || 1)) / 250);
+    const fit = (min) => { let k = Math.round(kMax * 100) / 100; col.style.setProperty('--k', k); while (col.scrollHeight > col.clientHeight + 1 && k > min) { k = Math.round((k - 0.04) * 100) / 100; col.style.setProperty('--k', k); } return col.scrollHeight <= col.clientHeight + 1; };
     if (!fit(0.62)) { col.classList.add('cols2'); fit(0.4); }
   });
 }

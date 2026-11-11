@@ -2,7 +2,6 @@
   "_説明": "モニターの「GUILD NEWS」「Tournaments」に出る内容です。news=お知らせ（左）、schedule=今後の予定（右）、tournaments=大会ごとのエントリー一覧。期間内のものだけが表示され、期限が過ぎると自動で消えます。1つも表示するものがない種類は、そのページ自体が出ません。",
   "_項目の意味": "tag=小さな赤いラベル／title_pt・body_pt・sub_pt=ポルトガル語（日本語の下に小さく出る）／title=見出し／body=説明文／from=表示開始日／until=表示終了日（どちらも YYYY-MM-DD、日本時間。省略可）／date_label=日付の表示／dow=曜日／sub=補足／date=開催日（YYYY-MM-DD。入れると当日に TODAY が付き、until を省略してもその日で自動で消える）。文中の \\n は改行。",
   "_大会の項目": "tournaments の各大会：name=正式な大会名／org=大会名の上に小さく出す主催など／short=モニターに出す短い名前（省略すると name）／color=カードの色（#rrggbb、省略すると自動）／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
-
   "news": [
     {
       "tag": "COMING SOON",
@@ -13,7 +12,6 @@
       "until": "2026-12-31"
     }
   ],
-
   "schedule": [
     {
       "date": "2026-11-14",
@@ -48,65 +46,160 @@
       "title_pt": "Central Japan Open"
     }
   ],
-
-  "tournaments_note": "2026.11.09 時点 ・ ASJJF 参加者一覧より",
-
+  "tournaments_note": "2026.11.11 時点 ・ ASJJF 参加者一覧より",
   "tournaments": [
     {
       "name": "Central Japan Open Jiu Jitsu Championship 2026",
-      "short": "セントラル（ギ）",
+      "short": "セントラル\n（ギ）",
       "date_label": "12/12(土)・13(日)",
       "venue": "青山記念武道館（愛知県半田市）",
       "date": "2026-12-12",
       "until": "2026-12-13",
       "entries": [
-        { "name": "松井 十獅郞",  "belt": "青", "cls": "ジュヴェナイル16-17 フェザー級" },
-        { "name": "松下 剛芽",    "belt": "白", "cls": "アダルト18 フェザー級", "open": true },
-        { "name": "岩浪 一輝",    "belt": "白", "cls": "アダルト18 ミディアムヘビー級", "open": true },
-        { "name": "山本 卓良",    "belt": "青", "cls": "アダルト18 ライト級", "open": true },
-        { "name": "本田 航",      "belt": "青", "cls": "マスター30 フェザー級", "open": true },
-        { "name": "壁谷 亮佑",    "belt": "紫", "cls": "マスター30 ヘビー級", "open": true },
-        { "name": "柴田 直樹",    "belt": "青", "cls": "マスター36 ミディアムヘビー級" },
-        { "name": "鈴木 義昌",    "belt": "青", "cls": "マスター41 フェザー級" },
-        { "name": "水野 正樹",    "belt": "白", "cls": "マスター46 ライトフェザー級" },
-        { "name": "近藤 匠晟",    "belt": "白", "cls": "キッズ4 ライトフェザー級" },
-        { "name": "潮田 景",      "belt": "白", "cls": "キッズ5 スーパーヘビー級" },
-        { "name": "大須賀 愛琳",  "belt": "白", "cls": "キッズ4 ミドル級", "sex": "女子" }
+        {
+          "name": "松井 十獅郞",
+          "belt": "青",
+          "cls": "ジュヴェナイル16-17 フェザー級"
+        },
+        {
+          "name": "松下 剛芽",
+          "belt": "白",
+          "cls": "アダルト18 フェザー級",
+          "open": true
+        },
+        {
+          "name": "岩浪 一輝",
+          "belt": "白",
+          "cls": "アダルト18 ミディアムヘビー級",
+          "open": true
+        },
+        {
+          "name": "山本 卓良",
+          "belt": "青",
+          "cls": "アダルト18 ライト級",
+          "open": true
+        },
+        {
+          "name": "本田 航",
+          "belt": "青",
+          "cls": "マスター30 フェザー級",
+          "open": true
+        },
+        {
+          "name": "壁谷 亮佑",
+          "belt": "紫",
+          "cls": "マスター30 ヘビー級",
+          "open": true
+        },
+        {
+          "name": "柴田 直樹",
+          "belt": "青",
+          "cls": "マスター36 ミディアムヘビー級"
+        },
+        {
+          "name": "鈴木 義昌",
+          "belt": "青",
+          "cls": "マスター41 フェザー級"
+        },
+        {
+          "name": "水野 正樹",
+          "belt": "白",
+          "cls": "マスター46 ライトフェザー級"
+        },
+        {
+          "name": "近藤 匠晟",
+          "belt": "白",
+          "cls": "キッズ4 ライトフェザー級"
+        },
+        {
+          "name": "潮田 景",
+          "belt": "白",
+          "cls": "キッズ5 スーパーヘビー級"
+        },
+        {
+          "name": "大須賀 愛琳",
+          "belt": "白",
+          "cls": "キッズ4 ミドル級",
+          "sex": "女子"
+        },
+        {
+          "name": "山田 縁",
+          "belt": "白",
+          "cls": "キッズ3 フェザー級"
+        }
       ]
     },
     {
       "name": "Central Japan Open No-gi Championship 2026",
-      "short": "セントラル（ノーギ）",
+      "short": "セントラル\n（ノーギ）",
       "date_label": "12/13(日)",
       "venue": "青山記念武道館（愛知県半田市）",
       "date": "2026-12-13",
       "until": "2026-12-13",
       "entries": [
-        { "name": "高柳 眞裕", "belt": "青", "cls": "アダルト18 フェザー級" }
+        {
+          "name": "高柳 眞裕",
+          "belt": "青",
+          "cls": "アダルト18 フェザー級"
+        }
       ]
     },
     {
       "name": "Nagoya International Jiu Jitsu Championship 2027",
-      "short": "名古屋\nインターナショナル",
+      "short": "名古屋\nインター\nナショナル",
       "date_label": "2027/1/9(土)・10(日)",
       "venue": "愛知県武道館（名古屋市）",
       "date": "2027-01-09",
       "until": "2027-01-10",
       "entries": [
-        { "name": "山田 縁",      "belt": "白", "cls": "キッズ4 ライトフェザー級" },
-        { "name": "大須賀 愛虎",  "belt": "白", "cls": "キッズ5 ライト級" },
-        { "name": "大須賀 愛琳",  "belt": "白", "cls": "キッズ4 ミドル級", "sex": "女子" }
+        {
+          "name": "山田 縁",
+          "belt": "白",
+          "cls": "キッズ4 ライトフェザー級"
+        },
+        {
+          "name": "大須賀 愛虎",
+          "belt": "白",
+          "cls": "キッズ5 ライト級"
+        },
+        {
+          "name": "大須賀 愛琳",
+          "belt": "白",
+          "cls": "キッズ4 ミドル級",
+          "sex": "女子"
+        }
       ]
     },
     {
       "name": "2027 Guam Marianas Pro Tokyo（Gi）",
-      "short": "グアム\nマリアナス・プロ",
+      "short": "グアム\nマリアナス\n・プロ",
       "date_label": "2027/2/20(土)",
       "venue": "駒沢オリンピック公園体育館（東京）",
       "date": "2027-02-20",
       "until": "2027-02-20",
       "entries": [
-        { "name": "壁谷 亮佑", "belt": "紫", "cls": "アダルト18 ヘビー級", "open": true }
+        {
+          "name": "壁谷 亮佑",
+          "belt": "紫",
+          "cls": "アダルト18 ヘビー級",
+          "open": true
+        },
+        {
+          "name": "山田 縁",
+          "belt": "白",
+          "cls": "キッズ4 ライトフェザー級"
+        },
+        {
+          "name": "大須賀 愛虎",
+          "belt": "白",
+          "cls": "キッズ5 ライト級"
+        },
+        {
+          "name": "大須賀 愛琳",
+          "belt": "白",
+          "cls": "キッズ4 ミドル級",
+          "sex": "女子"
+        }
       ]
     },
     {
@@ -118,7 +211,58 @@
       "date": "2026-12-04",
       "until": "2026-12-06",
       "entries": [
-        { "name": "壁谷 亮佑", "belt": "紫", "cls": "マスター1 スーパーヘビー級" }
+        {
+          "name": "壁谷 亮佑",
+          "belt": "紫",
+          "cls": "マスター1 スーパーヘビー級"
+        }
+      ]
+    },
+    {
+      "name": "Tokyo Open Jiu Jitsu Championship 2027",
+      "short": "東京オープン",
+      "date_label": "2027/1/16(土)・17(日)",
+      "venue": "駒沢オリンピック公園体育館（東京）",
+      "date": "2027-01-16",
+      "until": "2027-01-17",
+      "entries": [
+        {
+          "name": "大須賀 愛虎",
+          "belt": "白",
+          "cls": "キッズ5 ライト級"
+        },
+        {
+          "name": "大須賀 愛琳",
+          "belt": "白",
+          "cls": "キッズ4 ミドル級",
+          "sex": "女子"
+        }
+      ]
+    },
+    {
+      "name": "Eurasian Intercontinental Jiu Jitsu Championship 2027",
+      "short": "ユーラシアン\nインターコンチ",
+      "date_label": "2027/2/21(日)",
+      "venue": "東京",
+      "date": "2027-02-21",
+      "until": "2027-02-21",
+      "entries": [
+        {
+          "name": "山田 縁",
+          "belt": "白",
+          "cls": "キッズ4 ライトフェザー級"
+        },
+        {
+          "name": "大須賀 愛虎",
+          "belt": "白",
+          "cls": "キッズ5 ライト級"
+        },
+        {
+          "name": "大須賀 愛琳",
+          "belt": "白",
+          "cls": "キッズ4 ミドル級",
+          "sex": "女子"
+        }
       ]
     }
   ]
