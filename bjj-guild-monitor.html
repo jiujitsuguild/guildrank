@@ -257,7 +257,7 @@ body::before {
 .list-header { display:grid; grid-template-columns:60px 1fr 300px 100px 130px; gap:0; padding:8px 18px; margin-top:6px; border-bottom:1px solid var(--border-hi); }
 .list-header span { font-family:'Cinzel',serif; font-size:12px; letter-spacing:4px; color:var(--muted); text-transform:uppercase; }
 .lh-monthly,.lh-total { text-align:right; }
-.r-row { display:grid; grid-template-columns:60px 1fr 300px 100px 130px; align-items:center; gap:0; height:52px; padding:0 18px; border-bottom:1px solid rgba(36,48,80,0.55); animation:fadeInRow 0.5s ease both; }
+.r-row { display:grid; grid-template-columns:60px 1fr 300px 100px 130px; align-items:center; gap:0; height:46px; padding:0 18px; border-bottom:1px solid rgba(36,48,80,0.55); animation:fadeInRow 0.5s ease both; }
 .r-row:nth-child(even) { background:rgba(255,255,255,0.012); }
 .r-row:nth-child(1)  { animation-delay:0.03s; }
 .r-row:nth-child(2)  { animation-delay:0.06s; }
@@ -316,6 +316,11 @@ body::before {
 .instr-total-label { font-size: 6.5px; color: var(--muted); letter-spacing: 0.5px; margin-top: 2px; }
 
 /* バージョン表示（フッター内） */
+.conn-badge { top:12px; left:14px; }
+.pc-waiting { grid-column:1 / -1; align-self:center; justify-self:center; font-size:28px; letter-spacing:6px; color:var(--muted); }
+/* モニターでは、見出しに重ならないよう下のバーの中央に出す */
+@media (min-width:1025px) { .conn-badge { top:auto; left:50%; bottom:14px; transform:translateX(-50%); } }
+html.force-pc .conn-badge { top:auto; left:50%; bottom:14px; transform:translateX(-50%); }
 .version-tag {
   font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
   color: var(--gold-dim); background: rgba(224,180,0,0.08);
@@ -563,7 +568,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
-      <span class="version-tag">v2.1</span>
+      <span class="version-tag">v2.2</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
@@ -938,6 +943,12 @@ let nfcMember    = null; // NFCで特定された会員
 let checkinDone  = false;
 
 const CAT_LABEL = {adult:'Adult', kids_a:'Kids A', kids_b:'Kids B'};
+// 今月の回数が多い順（同じ回数なら累計が多い順）。同じ回数の人は同じ順位にする（例：1, 2, 2, 4）
+function rankMembers(list) {
+  const sorted = list.slice().sort((a, b) => (b.monthly - a.monthly) || ((b.total || 0) - (a.total || 0)));
+  sorted.forEach((m, i) => { m._rank = (i > 0 && m.monthly === sorted[i - 1].monthly) ? sorted[i - 1]._rank : i + 1; });
+  return sorted;
+}
 function rankLabel(r) { return r===1?'1ST':r===2?'2ND':r===3?'3RD':`${r}`; }
 function initial(name) { return (name||'?')[0]; }
 
@@ -1261,7 +1272,7 @@ async function fetchData(isRefresh = false) {
       }
       checkTitleChanges(allMembers);
       hideAllOverlays();
-      setLastUpdate();
+      if (newMembers) setLastUpdate();   // 取得できていないのに「更新時刻」を出さない
       renderPC();
       renderMobile();
       initCheckin(dataLoadedOnce);
@@ -1307,7 +1318,7 @@ window.addEventListener('pageshow', (e) => { if (e.persisted) location.reload();
 // ============================================================
 // PC レンダリング
 // ============================================================
-function renderPC() { renderPCSlide(SLIDES[slideIndex]); }
+function renderPC() { if (typeof applyNewsSlides === 'function') applyNewsSlides(); renderPCSlide(SLIDES[slideIndex]); }
 // インストラクター枠（左下固定ウィジェット・PC/TV画面のみ・拡張版）
 function renderInstructorWidget(instructors) {
   const pcScreen = document.getElementById('pcScreen');
@@ -1349,6 +1360,7 @@ function renderPCSlide(cat) {
   document.getElementById('pipKidsB').className = 's-pip '+(cat==='kids_b'?'kids-b-on':'off');
   const pipNews = document.getElementById('pipNews');
   if (pipNews) { pipNews.style.display = SLIDES.indexOf('news')>=0 ? '' : 'none'; pipNews.className = 's-pip '+(cat==='news'?'news-on':'off'); }
+  ['adult','kids_a','kids_b'].forEach((c, k) => { const el = document.getElementById(['pipAdult','pipKidsA','pipKidsB'][k]); if (el) el.style.display = SLIDES.indexOf(c) >= 0 ? '' : 'none'; });
   const pipTour = document.getElementById('pipTour');
   if (pipTour) { pipTour.style.display = SLIDES.some(isTour) ? '' : 'none'; pipTour.className = 's-pip '+(isTour(cat)?'tour-on':'off'); }
   const sb = document.getElementById('slideBar');
@@ -1364,9 +1376,13 @@ function renderPCSlide(cat) {
     startSlideProgress(cat);
     return;
   }
-  const members = allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
+  if (!allMembers.length) {   // まだ一度もデータを取れていない間は、空の表ではなく「読み込み中」を出す
+    document.getElementById('pcMain').innerHTML = '<div class="pc-waiting">データを読み込んでいます…</div>';
+    renderInstructorWidget([]); startSlideProgress(cat); return;
+  }
+  const members = rankMembers(allMembers.filter(m=>m.category===cat && !m.isInstructor));
   const instructors = allMembers.filter(m=>m.isInstructor).sort((a,b)=>b.total-a.total);
-  const top3=members.slice(0,3); const rest=members.slice(3,18);
+  const top3=members.slice(0,3); const rest=members.slice(3,20);   // 4〜20位まで
   const rClass={adult:['a-r1','a-r2','a-r3'],kids_a:['ka-r1','ka-r2','ka-r3'],kids_b:['kb-r1','kb-r2','kb-r3']}[cat];
   const catLabelClass={adult:'cat-adult',kids_a:'cat-kids-a',kids_b:'cat-kids-b'}[cat];
   const colLabelClass={adult:'',kids_a:'kids-a',kids_b:'kids-b'}[cat];
@@ -1379,7 +1395,7 @@ function renderPCSlide(cat) {
       <div class="p-card ${rClass[i]}">
         <div class="p-avatar">${initial(m.name)}</div>
         <div class="p-info">
-          <div class="p-rank-label">${i===0?'<span class="crown">👑</span>':''}${rankLabel(i+1)} Place</div>
+          <div class="p-rank-label">${m._rank===1?'<span class="crown">👑</span>':''}${rankLabel(m._rank)} Place</div>
           <div class="p-name">${m.name}${checkinDotHTML(m)}</div>
           <div class="p-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
         </div>
@@ -1399,10 +1415,10 @@ function renderPCSlide(cat) {
       </div>
       <div>${rest.map((m,i)=>`
         <div class="r-row ${i<3?'top6':''}" style="animation-delay:${i*0.04}s">
-          <div class="r-num">${i+4}</div>
+          <div class="r-num">${m._rank}</div>
           <div class="r-name">${m.name}${checkinDotHTML(m)}</div>
           <div class="r-title-cell">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
-          <div class="r-monthly-cell"><span class="r-monthly">${m.monthly}</span><span class="r-m-unit">sessions</span></div>
+          <div class="r-monthly-cell"><span class="r-monthly">${m.monthly}</span></div>
           <div class="r-total-cell"><span class="r-total">累計 <span>${m.total.toLocaleString()}</span> 回</span></div>
         </div>`).join('')}
       </div>
@@ -1444,7 +1460,7 @@ function switchMobileTab(cat) {
   document.getElementById('tabAdult').className='m-tab '+(cat==='adult' ?'active-adult':'');
   document.getElementById('tabKidsA').className='m-tab '+(cat==='kids_a'?'active-kids-a':'');
   document.getElementById('tabKidsB').className='m-tab '+(cat==='kids_b'?'active-kids-b':'');
-  const members=allMembers.filter(m=>m.category===cat && !m.isInstructor).sort((a,b)=>b.monthly-a.monthly);
+  const members=rankMembers(allMembers.filter(m=>m.category===cat && !m.isInstructor));
   const instructors=allMembers.filter(m=>m.category===cat && m.isInstructor).sort((a,b)=>b.total-a.total);
   const top3=members.slice(0,3); const rest=members.slice(3);
   const pClass1={adult:'p1-adult',kids_a:'p1-kids-a',kids_b:'p1-kids-b'}[cat];
@@ -1473,7 +1489,7 @@ function switchMobileTab(cat) {
     </div>`;
   const listHTML=rest.map((m,i)=>`
     <div class="m-r-row">
-      <div class="m-r-num">${i+4}</div>
+      <div class="m-r-num">${m._rank}</div>
       <div class="m-r-info">
         <div class="m-r-name">${m.name}${checkinDotHTML(m, true)}</div>
         <div class="m-r-badges">${titleBadgeHTML(m)}${beltHTML(m.belt,cat)}</div>
@@ -1661,7 +1677,8 @@ function updateConnBadge() {
   if (!badge) {
     badge = document.createElement('div');
     badge.id = 'connBadge';
-    badge.style.cssText = 'position:fixed;top:12px;left:14px;z-index:9999;font-family:sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:20px;pointer-events:none;transition:all 0.3s;';
+    badge.className = 'conn-badge';
+    badge.style.cssText = 'position:fixed;z-index:9999;font-family:sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:4px 12px;border-radius:20px;pointer-events:none;transition:all 0.3s;';
     document.body.appendChild(badge);
   }
   if (isOnline) {
@@ -1670,8 +1687,8 @@ function updateConnBadge() {
     badge.style.color = '#50c878';
     badge.style.border = '1px solid rgba(80,200,120,0.4)';
   } else {
-    const mins = lastGoodFetch ? Math.floor((Date.now()-lastGoodFetch)/60000) : '?';
-    badge.textContent = `⚠ 接続待ち（${mins}分前のデータ）`;
+    const mins = lastGoodFetch ? Math.floor((Date.now()-lastGoodFetch)/60000) : null;
+    badge.textContent = mins === null ? '⚠ 接続待ち（データ読み込み中）' : `⚠ 接続待ち（${mins}分前のデータを表示中）`;
     badge.style.background = 'rgba(228,90,90,0.15)';
     badge.style.color = '#e45a5a';
     badge.style.border = '1px solid rgba(228,90,90,0.4)';
@@ -1738,7 +1755,9 @@ function applyNewsSlides() {
   const a = newsItems();
   const hasNews = (a.news.length + a.schedule.length) > 0;
   const hasTour = a.tournaments.length > 0;
-  const next = BASE_SLIDES.concat(hasNews ? ['news'] : [], hasTour ? ['tour'] : []);   // 順番：ランキング3枚 → お知らせ → 大会
+  // ランキングは、メンバーが1人もいないクラス（例：キッズBが0人）のページは飛ばす。データ未取得のうちは3枚とも出す
+  const rankSlides = allMembers.length ? BASE_SLIDES.filter(c => allMembers.some(m => m.category === c && !m.isInstructor)) : BASE_SLIDES;
+  const next = (rankSlides.length ? rankSlides : BASE_SLIDES).concat(hasNews ? ['news'] : [], hasTour ? ['tour'] : []);   // 順番：ランキング3枚 → お知らせ → 大会
   if (next.join() !== SLIDES.join()) {
     const current = SLIDES[slideIndex];
     SLIDES = next;
@@ -1909,13 +1928,6 @@ fetchData();
   setTimeout(checkUpdate, 20 * 1000);           // 起動20秒後に基準値を取得
   setInterval(checkUpdate, 10 * 60 * 1000);     // 以降10分ごと
 
-  // ---- ③ DOM掃除：演出の残骸（万一消し忘れた要素）を定期的に除去 ----
-  const TRANSIENT_CLASSES = ['hw-flash', 'hw-boo', 'hw-drop', 'hw-swarm', 'hw-energy-burst'];
-  setInterval(() => {
-    TRANSIENT_CLASSES.forEach(cls => {
-      document.querySelectorAll('.' + cls).forEach(el => el.remove());
-    });
-  }, 3 * 60 * 1000);
 })();
 </script>
 
