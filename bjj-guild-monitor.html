@@ -589,7 +589,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
-      <span class="version-tag">v2.4</span>
+      <span class="version-tag">v2.5</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
@@ -802,10 +802,10 @@ function applyMobileTranslations() {
 }
 const FETCH_INTERVAL_MS = 10 * 1000;  // 10秒ごとに取得（画面の再描画は変化があった時だけ）
 const SLIDE_INTERVAL_MS      = 5 * 1000;    // ランキング（アダルト／Aクラス／Bクラス）の1枚あたりの表示時間
-const NEWS_SLIDE_INTERVAL_MS = 8 * 1000;    // GUILD NEWS の表示時間
+const NEWS_SLIDE_INTERVAL_MS = 11 * 1000;    // GUILD NEWS の表示時間
 const TOUR_MAX               = 7;           // 大会は1ページに最大7つ（開催日が近い順）。8つ目以降は、先の大会が終わって空きができたら順に出る
 const isTour = c => c === 'tour';
-const TOUR_SLIDE_INTERVAL_MS = 8 * 1000;    // 大会エントリー一覧の表示時間
+const TOUR_SLIDE_INTERVAL_MS = 11 * 1000;    // 大会エントリー一覧の表示時間
 const BASE_SLIDES            = ['adult', 'kids_a', 'kids_b'];
 let   SLIDES                 = BASE_SLIDES.slice();   // 該当する内容がある間だけ、末尾に 'news'（お知らせ）→'tour'（大会）が加わる（下の GUILD NEWS 参照）
 let lastDataSnapshot = null; // ★前回取得したデータのスナップショット（変化検知用）
