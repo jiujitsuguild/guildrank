@@ -128,6 +128,27 @@ body::before {
 .n-col.solo .n-tag   { align-self:flex-start; font-size:17px; margin-bottom:28px; }
 .n-col.solo .n-title { font-size:46px; }
 .n-col.solo .n-body  { font-size:30px; margin-top:26px; }
+.pc-main.news-wide { grid-template-columns:800px 1fr; }
+.pc-main.news-wide::before { left:800px; }
+/* 予約受付など「価格・要点・QR」つきのお知らせ：上段＝見出しと価格＋QR、下段＝要点4つ */
+.n-card.n-gi { max-height:none !important; justify-content:flex-start !important; padding:26px 34px 22px 44px !important; }
+.n-gi .n-tag { margin-bottom:14px !important; }
+.n-gi .n-title { font-size:42px !important; }
+.n-gi-top { display:grid; grid-template-columns:1fr 226px; gap:24px; align-items:start; }
+.n-price { display:flex; align-items:baseline; gap:4px; margin-top:12px; color:var(--white); white-space:nowrap; }
+.n-price b { font-family:'Cinzel','Noto Sans JP',serif; font-size:76px; line-height:1; font-weight:900; letter-spacing:1px; }
+.n-price i { font-style:normal; font-size:38px; font-weight:900; }
+.n-price span { font-size:22px; color:var(--white-dim); margin-left:6px; }
+.n-points { list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:16px 22px; margin-top:26px; }
+.n-points li { display:flex; flex-direction:column; gap:2px; border-left:3px solid var(--news); padding:1px 0 1px 12px; min-width:0; }
+.n-points em { font-style:normal; font-size:16px; font-weight:700; letter-spacing:3px; color:#ff8a7f; }
+.n-points span { font-size:24px; font-weight:700; line-height:1.35; color:var(--white); }
+.n-qr { display:flex; flex-direction:column; align-items:center; gap:7px; text-align:center; }
+.n-qr img { width:226px; height:226px; display:block; background:#fff; border-radius:6px; image-rendering:pixelated; shape-rendering:crispEdges; }
+.n-qr-cap { font-size:21px; font-weight:900; color:var(--white); letter-spacing:1px; }
+.n-qr-sub { font-size:15px; line-height:1.45; color:var(--white-dim); }
+.n-qr-mail { font-size:14px; color:var(--muted); letter-spacing:.3px; word-break:break-all; }
+.n-gi .n-pt { margin-top:22px !important; padding-top:16px !important; font-size:20px !important; line-height:1.5 !important; border-top:1px solid var(--news-dim); }
 .n-concept { margin-top:auto; padding:26px 4px 0; font-size:22px; line-height:1.8; color:var(--muted); letter-spacing:2px; border-top:1px solid var(--border); }
 .n-list { display:flex; flex-direction:column; gap:16px; padding:6px 0 0; flex:1; min-height:0; }
 .n-row { display:grid; grid-template-columns:340px 1fr; align-items:center; flex:1 1 0; min-height:120px; max-height:190px; border:1px solid var(--border); border-radius:4px; background:var(--card); position:relative; overflow:hidden; animation:slideInLeft 0.7s cubic-bezier(0.22,1,0.36,1) both; }
@@ -568,7 +589,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
-      <span class="version-tag">v2.3</span>
+      <span class="version-tag">v2.4</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
@@ -1369,7 +1390,8 @@ function renderPCSlide(cat) {
   // ヘッダーの見出し／月ラベルをスライドに合わせる（お知らせ・大会の間はランキング用の「月」表示を隠す）
   const ttl = document.querySelector('.hdr-title'); if (ttl) ttl.textContent = (cat==='news' ? 'Guild News' : isTour(cat) ? 'Tournaments' : 'Guild Ranking');
   const mchip = document.querySelector('.month-chip'); if (mchip) mchip.style.visibility = (cat==='news' || isTour(cat) ? 'hidden' : 'visible');
-  document.getElementById('pcMain').classList.toggle('tour-on', isTour(cat));   // 大会スライドは中央の仕切り線なしの1枚レイアウト
+  document.getElementById('pcMain').classList.toggle('tour-on', isTour(cat));
+  document.getElementById('pcMain').classList.remove('news-wide');   // お知らせ（予約受付つき）のときだけ renderNewsSlide が付ける   // 大会スライドは中央の仕切り線なしの1枚レイアウト
   if (cat==='news' || isTour(cat)) {
     if (cat==='news') renderNewsSlide(); else renderTournamentSlide();
     renderInstructorWidget([]);   // お知らせ・大会の間はインストラクター枠を隠す
@@ -1780,10 +1802,20 @@ async function loadNews() {
 }
 function renderNewsSlide() {
   const a = newsItems();
+  const rich = a.news.length === 1 && !!(a.news[0].price || (a.news[0].points || []).length || a.news[0].qr);   // 価格・要点・QRつきのお知らせは、左を広げて大きく出す
+  document.getElementById('pcMain').classList.toggle('news-wide', rich);
   const newsHTML = a.news.map((n, i) => `
-    <div class="n-card" style="animation-delay:${i * 0.08}s">
-      ${n.tag ? `<span class="n-tag">${esc(n.tag)}</span>` : ''}
-      <div class="n-title">${escBr(n.title)}</div>
+    <div class="n-card${rich ? ' n-gi' : ''}" style="animation-delay:${i * 0.08}s">
+      <div class="n-gi-top">
+        <div class="n-gi-main">
+          ${n.tag ? `<span class="n-tag">${esc(n.tag)}</span>` : ''}
+          <div class="n-title">${escBr(n.title)}</div>
+          ${n.price ? `<div class="n-price"><b>${esc(String(n.price).replace('円',''))}</b><i>円</i>${n.price_note ? `<span>${esc(n.price_note)}</span>` : ''}</div>` : ''}
+        </div>
+        ${n.qr && /^[\w.\-]+$/.test(n.qr) ? `<div class="n-qr"><img src="${esc(n.qr)}" alt="">
+          ${n.qr_caption ? `<div class="n-qr-cap">${esc(n.qr_caption)}</div>` : ''}${n.qr_sub ? `<div class="n-qr-sub">${escBr(n.qr_sub)}</div>` : ''}${n.email ? `<div class="n-qr-mail">${esc(n.email)}</div>` : ''}</div>` : ''}
+      </div>
+      ${Array.isArray(n.points) && n.points.length ? `<ul class="n-points">${n.points.map(p => `<li><em>${esc(p.k)}</em><span>${esc(p.v)}</span></li>`).join('')}</ul>` : ''}
       ${n.body ? `<div class="n-body">${escBr(n.body)}</div>` : ''}
       ${(n.title_pt || n.body_pt) ? `<div class="n-pt">${[n.title_pt, n.body_pt].filter(Boolean).map(escBr).join('<br>')}</div>` : ''}
     </div>`).join('');
