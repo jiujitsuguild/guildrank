@@ -80,6 +80,8 @@ body::before {
 .hdr-title { font-family:'Cinzel',serif; font-size:38px; font-weight:900; letter-spacing:5px; background:linear-gradient(135deg,var(--gold-light),var(--gold) 55%,var(--gold-dim)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; line-height:1; text-transform:uppercase; }
 .hdr-center { display:flex; flex-direction:column; align-items:center; gap:6px; }
 .season-chip { display:flex; align-items:center; gap:10px; border:1px solid var(--gold-dim); background:linear-gradient(135deg,rgba(212,168,76,0.12),rgba(212,168,76,0.04)); padding:7px 22px; border-radius:2px; font-family:'Cinzel',serif; font-size:14px; letter-spacing:4px; color:var(--gold); text-transform:uppercase; }
+.chip-sep { width:1px; height:14px; background:var(--gold-dim); margin:0 2px; }
+#pcMemberCount b { font-size:17px; font-weight:900; color:var(--gold-light); margin-left:4px; }
 .month-chip { display:flex; align-items:center; gap:8px; font-family:'Cinzel',serif; font-size:11px; letter-spacing:3px; color:var(--muted); text-transform:uppercase; }
 .month-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); animation:dotPulse 2s ease-in-out infinite; }
 @keyframes dotPulse { 0%,100%{opacity:0.5;} 50%{opacity:1;} }
@@ -577,7 +579,7 @@ html.force-pc body { overflow:hidden !important; }
       <h1 class="hdr-title">Guild Ranking</h1>
     </div>
     <div class="hdr-center">
-      <span class="season-chip">⚔ Season 2026</span>
+      <span class="season-chip">⚔ Season 2026<span class="chip-sep" id="pcMemberSep" style="display:none"></span><span id="pcMemberCount"></span></span>
       <div class="month-chip"><div class="month-dot"></div><span id="pcMonthLabel">— Monthly —</span></div>
     </div>
     <div class="hdr-right">
@@ -589,7 +591,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
-      <span class="version-tag">v2.5</span>
+      <span class="version-tag">v2.6</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
@@ -1373,7 +1375,15 @@ function renderInstructorWidget(instructors) {
   `;
 }
 
+// 登録メンバー数（シートの全員。インストラクターも含む）をヘッダーに表示
+function updateMemberCount() {
+  const n = allMembers.length, el = document.getElementById('pcMemberCount'), sep = document.getElementById('pcMemberSep');
+  if (!el || !sep) return;
+  sep.style.display = n ? '' : 'none';
+  el.innerHTML = n ? `Members<b>${n}</b>` : '';
+}
 function renderPCSlide(cat) {
+  updateMemberCount();
   const hdr = document.getElementById('pcHeader');
   hdr.className = 'pc-header'+(cat==='kids_a'?' kids-a-mode':cat==='kids_b'?' kids-b-mode':cat==='news'?' news-mode':isTour(cat)?' tour-mode':'');
   document.getElementById('pipAdult').className = 's-pip '+(cat==='adult' ?'adult-on':'off');
