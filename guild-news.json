@@ -4,34 +4,34 @@
  "_大会の項目": "tournaments の各大会：name=正式な大会名／org=大会名の上に小さく出す主催など／short=モニターに出す短い名前（省略すると name）／color=カードの色（#rrggbb、省略すると自動）／date_label=日程の表示／venue=会場／date=初日／until=最終日（この日を過ぎると消える）／entries=選手の一覧（name=氏名／belt=白・青・紫・茶・黒／cls=カテゴリ／open=true でOPENクラスにも出場／sex=女子のときだけ「女子」）。tournaments_note は一覧の右下に出す注記。",
  "news": [
   {
-   "tag": "予約受付中",
-   "title": "ギルドオリジナル\n柔術着 予約開始",
+   "tag": "販売中",
+   "title": "ギルドオリジナル\n柔術着 販売中",
    "price": "17,600円",
-   "price_note": "（税込）",
+   "price_note": "（税込）＋送料",
    "points": [
     {
-     "k": "まとめ注文",
-     "v": "11/22（日）まで"
+     "k": "販売方法",
+     "v": "単品でのご注文"
     },
     {
-     "k": "22日以降",
-     "v": "単品OK（送料あり）"
-    },
-    {
-     "k": "納期",
-     "v": "ご注文から約3週間"
+     "k": "送料",
+     "v": "別途かかります"
     },
     {
      "k": "お支払い",
-     "v": "初回のご注文は現金"
+     "v": "現金 または カード"
+    },
+    {
+     "k": "お問い合わせ",
+     "v": "スタッフまで"
     }
    ],
    "qr": "qr-kimono.svg",
-   "qr_caption": "QRからメールで予約",
+   "qr_caption": "QRからメールで注文",
    "qr_sub": "お名前・色・サイズを\nお知らせください",
    "email": "jiujitsu.guild@gmail.com",
-   "title_pt": "Reservas abertas do kimono original da Guild",
-   "body_pt": "17.600 ienes (impostos inclusos)\nPedido em grupo até 22/11 ・ Prazo: cerca de 3 semanas",
+   "title_pt": "Kimono original da Guild à venda",
+   "body_pt": "17.600 ienes (impostos inclusos) + frete\nPagamento em dinheiro ou cartão ・ Fale com a equipe",
    "until": "2026-12-31"
   }
  ],
@@ -53,12 +53,13 @@
    "sub_pt": "Vol. 4 ・ 18h às 20h"
   },
   {
-   "date_label": "11月下旬\n〜12月上旬",
+   "date": "2026-12-06",
+   "date_label": "12/6",
+   "dow": "日",
    "title": "帯昇格式",
-   "sub": "日程は調整中です",
+   "sub": "17:30〜",
    "title_pt": "Graduação",
-   "sub_pt": "Data a confirmar",
-   "until": "2026-12-10"
+   "sub_pt": "A partir das 17h30"
   },
   {
    "date": "2026-12-12",
@@ -67,6 +68,15 @@
    "dow": "土・日",
    "title": "セントラル",
    "title_pt": "Central Japan Open"
+  },
+  {
+   "date": "2026-12-27",
+   "date_label": "12/27",
+   "dow": "日",
+   "title": "柔術で勝つための柔道クラス",
+   "sub": "背負い投げ②",
+   "title_pt": "Aula de judô pra vencer no jiujitsu",
+   "sub_pt": "Seoi nage ②"
   }
  ],
  "tournaments_note": "2026.11.11 時点 ・ ASJJF 参加者一覧より",

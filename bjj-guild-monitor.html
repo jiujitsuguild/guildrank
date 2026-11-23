@@ -137,10 +137,12 @@ body::before {
 .n-gi .n-tag { margin-bottom:14px !important; }
 .n-gi .n-title { font-size:42px !important; }
 .n-gi-top { display:grid; grid-template-columns:1fr 226px; gap:24px; align-items:start; }
-.n-price { display:flex; align-items:baseline; gap:4px; margin-top:12px; color:var(--white); white-space:nowrap; }
+.n-gi-main { min-width:0; }
+.n-price { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 4px; margin-top:12px; color:var(--white); }
+.n-price b, .n-price i { white-space:nowrap; }
 .n-price b { font-family:'Cinzel','Noto Sans JP',serif; font-size:76px; line-height:1; font-weight:900; letter-spacing:1px; }
 .n-price i { font-style:normal; font-size:38px; font-weight:900; }
-.n-price span { font-size:22px; color:var(--white-dim); margin-left:6px; }
+.n-price span { font-size:24px; font-weight:700; color:var(--white-dim); flex-basis:100%; margin-top:6px; }
 .n-points { list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:16px 22px; margin-top:26px; }
 .n-points li { display:flex; flex-direction:column; gap:2px; border-left:3px solid var(--news); padding:1px 0 1px 12px; min-width:0; }
 .n-points em { font-style:normal; font-size:16px; font-weight:700; letter-spacing:3px; color:#ff8a7f; }
@@ -591,7 +593,7 @@ html.force-pc body { overflow:hidden !important; }
   <footer class="pc-footer">
     <div class="footer-left">
       <span class="footer-logo">⚔ BJJ Guild Monitor</span>
-      <span class="version-tag">v2.6</span>
+      <span class="version-tag">v2.7</span>
       <div class="footer-sep"></div>
       <span class="last-upd" id="pcLastUpd">Last Updated: —</span>
     </div>
