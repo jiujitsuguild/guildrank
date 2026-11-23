@@ -32,7 +32,11 @@
    "email": "jiujitsu.guild@gmail.com",
    "title_pt": "Kimono original da Guild à venda",
    "body_pt": "17.600 ienes (impostos inclusos) + frete\nPagamento em dinheiro ou cartão ・ Fale com a equipe",
-   "until": "2026-12-31"
+   "until": "2026-12-31",
+   "image": "guild-kimono-photo.jpg",
+   "image_label": "Colors",
+   "image_caption": "白 ・ 青 ・ 黒",
+   "image_sub": "サンプルあり\nスタッフまで"
   }
  ],
  "schedule": [
