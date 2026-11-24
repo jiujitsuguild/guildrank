@@ -82,7 +82,7 @@
    "sub_pt": "Seoi nage ②"
   }
  ],
- "tournaments_note": "2026.11.11 時点 ・ ASJJF 参加者一覧より",
+ "tournaments_note": "2026.11.24 時点 ・ ASJJF 参加者一覧より",
  "tournaments": [
   {
    "name": "Central Japan Open Jiu Jitsu Championship 2026",
@@ -141,6 +141,12 @@
      "name": "鈴木 義昌",
      "belt": "青",
      "cls": "マスター41 フェザー級"
+    },
+    {
+     "name": "水口 由加利",
+     "belt": "青",
+     "cls": "マスター41 ライト級",
+     "sex": "女子"
     },
     {
      "name": "水野 正樹",
